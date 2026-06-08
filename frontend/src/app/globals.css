@@ -23,4 +23,94 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+/* Custom Light Theme overrides - activated when .dark is NOT present on html */
+:root:not(.dark) {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+:root:not(.dark) body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Page Backgrounds */
+:root:not(.dark) .bg-slate-950,
+:root:not(.dark) .bg-\[\#080B11\] {
+  background-color: #f8fafc !important;
+}
+
+/* Headers, Sidebar, Card Containers */
+:root:not(.dark) .bg-slate-900,
+:root:not(.dark) .bg-\[\#0B0F19\]\/80,
+:root:not(.dark) .bg-\[\#0B0F19\]\/60 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Sub-card backgrounds */
+:root:not(.dark) .bg-slate-900\/40,
+:root:not(.dark) .bg-slate-900\/60,
+:root:not(.dark) .bg-slate-800 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Text Overrides */
+:root:not(.dark) .text-slate-100,
+:root:not(.dark) .text-slate-200,
+:root:not(.dark) .text-slate-300 {
+  color: #0f172a !important;
+}
+
+:root:not(.dark) .text-slate-400 {
+  color: #475569 !important;
+}
+
+:root:not(.dark) .text-white {
+  color: #0f172a !important;
+}
+
+/* Borders */
+:root:not(.dark) .border-slate-800,
+:root:not(.dark) .border-slate-800\/80,
+:root:not(.dark) .border-slate-700 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Hovers */
+:root:not(.dark) .hover\:bg-slate-900\/30:hover {
+  background-color: #f1f5f9 !important;
+}
+
+:root:not(.dark) .hover\:bg-slate-800:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+:root:not(.dark) .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+/* Inputs and Search bars */
+:root:not(.dark) input {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+:root:not(.dark) input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Charts and graphics styling overrides */
+:root:not(.dark) .recharts-cartesian-grid-horizontal line,
+:root:not(.dark) .recharts-cartesian-grid-vertical line {
+  stroke: #cbd5e1 !important;
+}
+:root:not(.dark) .recharts-text {
+  fill: #475569 !important;
 }
