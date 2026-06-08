@@ -1,6 +1,6 @@
 # FinAI - Detailed Daily Task Tracker
 
-This living document breaks down the 8-week (40 working days) implementation plan into a day-by-day checklist for all three developers. 
+This living document breaks down the 8-week (40 working days) implementation plan into a day-by-day checklist for all three developers.
 
 *   **Dev 1:** Frontend (Next.js, Tailwind, Recharts)
 *   **Dev 2:** Backend (FastAPI, PostgreSQL, Redis, Auth)
@@ -17,11 +17,11 @@ This living document breaks down the 8-week (40 working days) implementation pla
   - Dev 1: Setup Next.js App Router structure for multi-tenant portals (Merchant, Admin, Analyst).
   - Dev 2: Design PostgreSQL schema, set up Alembic for migrations, create initial tables.
   - Dev 3: Set up GitHub Actions CI for automated linting and testing on PRs.
-- `[ ]` **Day 3**
+- `[x]` **Day 3**
   - Dev 1: Implement base UI layout, responsive navigation bar, and sidebar.
   - Dev 2: Create User Models & JWT Authentication logic.
   - Dev 3: Provision AWS S3 buckets (or local MinIO for dev) and basic ChromaDB container.
-- `[ ]` **Day 4**
+- `[x]` **Day 4**
   - Dev 1: Build Login/Register and MFA UI screens.
   - Dev 2: Create Authentication API endpoints (Login, Register, Token Refresh).
   - Dev 3: Configure pre-commit hooks (Black, Flake8, Prettier) to enforce code standards.
