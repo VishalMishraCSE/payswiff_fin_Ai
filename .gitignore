@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
 
 # Environment files
@@ -7,9 +7,17 @@ node_modules/
 # Build outputs
 dist/
 build/
+.next/
 
 # IDE
 .vscode/
 
 # Logs
 *.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
