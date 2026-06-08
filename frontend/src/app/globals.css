@@ -56,41 +56,77 @@ body {
 :root:not(.dark) .bg-slate-900\/60,
 :root:not(.dark) .bg-slate-800 {
   background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
 }
 
-/* Text Overrides */
+:root:not(.dark) .bg-slate-900\/30 {
+  background-color: #f1f5f9 !important;
+}
+
+:root:not(.dark) .bg-indigo-950 {
+  background-color: #e0e7ff !important; /* light user profile bubble */
+  color: #4f46e5 !important;
+}
+
+/* Text Overrides & High Contrast Accents */
 :root:not(.dark) .text-slate-100,
-:root:not(.dark) .text-slate-200,
-:root:not(.dark) .text-slate-300 {
+:root:not(.dark) .text-slate-200 {
   color: #0f172a !important;
 }
-
+:root:not(.dark) .text-slate-300 {
+  color: #334155 !important;
+}
 :root:not(.dark) .text-slate-400 {
   color: #475569 !important;
 }
-
 :root:not(.dark) .text-white {
   color: #0f172a !important;
+}
+:root:not(.dark) .text-indigo-400 {
+  color: #4f46e5 !important; /* Indigo-600 */
+}
+:root:not(.dark) .text-violet-400 {
+  color: #7c3aed !important; /* Violet-600 */
+}
+:root:not(.dark) .text-emerald-400 {
+  color: #059669 !important; /* Emerald-600 */
+}
+:root:not(.dark) .text-rose-400 {
+  color: #dc2626 !important; /* Rose-600 */
+}
+:root:not(.dark) .text-teal-400 {
+  color: #0d9488 !important; /* Teal-600 */
+}
+
+/* Badge Background Overrides */
+:root:not(.dark) .bg-emerald-500\/10 {
+  background-color: #d1fae5 !important; /* Light green */
+}
+:root:not(.dark) .bg-amber-500\/10 {
+  background-color: #fef3c7 !important; /* Light amber */
+}
+:root:not(.dark) .bg-rose-500\/10 {
+  background-color: #ffe4e6 !important; /* Light red */
+}
+:root:not(.dark) .bg-indigo-500\/10 {
+  background-color: #e0e7ff !important; /* Light indigo */
 }
 
 /* Borders */
 :root:not(.dark) .border-slate-800,
 :root:not(.dark) .border-slate-800\/80,
 :root:not(.dark) .border-slate-700 {
-  border-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
 }
 
-/* Hovers */
+/* Hovers & Active States */
 :root:not(.dark) .hover\:bg-slate-900\/30:hover {
   background-color: #f1f5f9 !important;
 }
-
 :root:not(.dark) .hover\:bg-slate-800:hover {
   background-color: #f1f5f9 !important;
   color: #0f172a !important;
 }
-
 :root:not(.dark) .hover\:text-white:hover {
   color: #0f172a !important;
 }
@@ -101,7 +137,6 @@ body {
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
 }
-
 :root:not(.dark) input::placeholder {
   color: #94a3b8 !important;
 }
