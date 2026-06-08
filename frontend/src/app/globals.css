@@ -104,6 +104,16 @@ body {
   color: #0d9488 !important; /* Teal-600 */
 }
 
+/* Force white text/icons on elements with dark/colored backgrounds in light mode */
+:root:not(.dark) .bg-indigo-600,
+:root:not(.dark) .bg-indigo-600 *,
+:root:not(.dark) .bg-slate-900\/80,
+:root:not(.dark) .bg-slate-900\/80 *,
+:root:not(.dark) .bg-gradient-to-tr,
+:root:not(.dark) .bg-gradient-to-tr * {
+  color: #ffffff !important;
+}
+
 /* Badge Background Overrides */
 :root:not(.dark) .bg-emerald-500\/10 {
   background-color: #d1fae5 !important; /* Light green */
