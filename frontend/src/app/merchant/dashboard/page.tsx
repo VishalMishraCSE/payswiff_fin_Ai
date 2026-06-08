@@ -98,7 +98,7 @@ export default function MerchantDashboard() {
       {/* Top Navbar */}
       <header className="border-b border-slate-800 bg-[#0B0F19]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center font-bold text-white shadow-md shadow-indigo-500/20">
+          <div className="h-9 w-9 rounded-lg bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center font-bold text-white-forced shadow-md shadow-indigo-500/20">
             F
           </div>
           <div>
@@ -158,12 +158,12 @@ export default function MerchantDashboard() {
           <div className="flex items-center gap-3">
             <button 
               onClick={handleRefresh}
-              className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 hover:bg-slate-800/80 px-4 py-2 rounded-lg text-sm transition-all text-slate-300 active:scale-95"
+              className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 hover:bg-slate-800/80 px-4 py-2 rounded-lg text-sm transition-all text-white-forced active:scale-95"
             >
               <RefreshCw size={14} className={`${refreshing ? 'animate-spin' : ''}`} />
               <span>{refreshing ? 'Refreshing...' : 'Sync'}</span>
             </button>
-            <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg text-sm text-white font-medium shadow-md shadow-indigo-600/20 transition-all active:scale-95">
+            <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg text-sm text-white-forced font-medium shadow-md shadow-indigo-600/20 transition-all active:scale-95">
               <span>Settlements</span>
               <ArrowUpRight size={14} />
             </button>
@@ -357,7 +357,7 @@ export default function MerchantDashboard() {
                 <button
                   key={tab}
                   onClick={() => setFilter(tab)}
-                  className={`px-3 py-1.5 rounded-lg font-medium transition-all ${filter === tab ? 'bg-indigo-600 text-white' : 'hover:text-slate-100'}`}
+                  className={`px-3 py-1.5 rounded-lg font-medium transition-all ${filter === tab ? 'bg-indigo-600 text-white-forced' : 'hover:text-slate-100'}`}
                 >
                   {tab}
                 </button>

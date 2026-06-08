@@ -114,6 +114,10 @@ body {
   color: #ffffff !important;
 }
 
+.text-white-forced {
+  color: #ffffff !important;
+}
+
 /* Badge Background Overrides */
 :root:not(.dark) .bg-emerald-500\/10 {
   background-color: #d1fae5 !important; /* Light green */
