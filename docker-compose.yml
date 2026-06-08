@@ -21,5 +21,30 @@ services:
       - "6379:6379"
     restart: unless-stopped
 
+  minio:
+    image: minio/minio:RELEASE.2023-09-07T02-42-02Z
+    container_name: finai_storage
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+  chromadb:
+    image: chromadb/chroma:0.4.10
+    container_name: finai_vector_db
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/data
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  minio_data:
+  chroma_data:
