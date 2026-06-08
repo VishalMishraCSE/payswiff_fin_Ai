@@ -10,4 +10,4 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     role = Column(String, default="merchant") # merchant, admin, analyst
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
