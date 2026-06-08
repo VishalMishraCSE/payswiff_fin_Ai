@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  DollarSign, 
+  IndianRupee, 
   CreditCard, 
   ShieldAlert, 
   TrendingUp, 
@@ -179,7 +179,7 @@ export default function MerchantDashboard() {
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">Total Revenue</span>
               <div className="p-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-xl">
-                <DollarSign size={18} />
+                <IndianRupee size={18} />
               </div>
             </div>
             <div className="mt-4">
