@@ -3,14 +3,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from database import get_db
 import models
-import importlib.util
-import os
-
-# Explicitly load the root auth module to avoid namespace clashes with this file (routers/auth.py)
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-auth_spec = importlib.util.spec_from_file_location("root_auth", os.path.join(parent_dir, "auth.py"))
-auth = importlib.util.module_from_spec(auth_spec)
-auth_spec.loader.exec_module(auth)
+from auth import get_password_hash, verify_password, create_access_token, create_refresh_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -34,7 +27,7 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    hashed_pwd = auth.get_password_hash(user_in.password)
+    hashed_pwd = get_password_hash(user_in.password)
     new_user = models.User(
         email=user_in.email,
         hashed_password=hashed_pwd,
@@ -48,14 +41,15 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
 @router.post("/login", response_model=Token)
 def login(credentials: UserLogin, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == credentials.email).first()
-    if not user or not auth.verify_password(credentials.password, user.hashed_password):
+    if not user or not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     user_data = {"sub": user.email, "role": user.role}
-    access_token = auth.create_access_token(user_data)
-    refresh_token = auth.create_refresh_token(user_data)
+    access_token = create_access_token(user_data)
+    refresh_token = create_refresh_token(user_data)
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer"
     }
+
