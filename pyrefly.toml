@@ -1,0 +1,7 @@
+python_version = "3.13"
+search_path = [
+  "./backend",
+  "./backend/venv/Lib/site-packages",
+]
+project-includes = ["backend/**/*.py"]
+project-excludes = ["**/venv/**", "**/node_modules/**", "**/__pyrefly_virtual__/**"]
