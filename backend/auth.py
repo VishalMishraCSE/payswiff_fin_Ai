@@ -1,5 +1,6 @@
 import datetime
-from jose import JWTError, jwt
+from typing import Any
+from jose import JWTError, jwt  # type: ignore[import-untyped]
 from passlib.context import CryptContext
 
 # Configuration
@@ -28,9 +29,9 @@ def create_refresh_token(data: dict) -> str:
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def decode_token(token: str) -> dict:
+def decode_token(token: str) -> dict[str, Any] | None:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload: dict[str, Any] = dict(jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]))
         return payload
     except JWTError:
         return None
@@ -53,8 +54,8 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     payload = decode_token(token)
     if payload is None:
         raise credentials_exception
-    email: str = payload.get("sub")
-    if email is None:
+    email = payload.get("sub")
+    if not isinstance(email, str):
         raise credentials_exception
     user = db.query(models.User).filter(models.User.email == email).first()
     if user is None:
