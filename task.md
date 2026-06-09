@@ -25,16 +25,16 @@ This living document breaks down the 8-week (40 working days) implementation pla
   - Dev 1: Build Login/Register and MFA UI screens.
   - Dev 2: Create Authentication API endpoints (Login, Register, Token Refresh).
   - Dev 3: Configure pre-commit hooks (Black, Flake8, Prettier) to enforce code standards.
-- `[ ]` **Day 5**
-  - Dev 1: Integrate UI with Auth API, store JWT securely in HTTP-only cookies.
-  - Dev 2: Implement Role-Based Access Control (RBAC) middleware for API routes.
-  - Dev 3: Finalize CI/CD pipeline, create Pull Request templates, and review Git workflow with the team.
+- `[/]` **Day 5**
+  - `[ ]` Dev 1: Integrate UI with Auth API, store JWT securely in HTTP-only cookies.
+  - `[ ]` Dev 2: Implement Role-Based Access Control (RBAC) middleware for API routes.
+  - `[x]` Dev 3: Finalize CI/CD pipeline, create Pull Request templates, and review Git workflow with the team.
 
 ## Week 2: Core Data & Mocking
-- `[ ]` **Day 6**
-  - Dev 1: Create empty Dashboard container components and routing logic based on user role.
-  - Dev 2: Create Transaction & Merchant Models in the database.
-  - Dev 3: **Write Python script to generate the synthetic historical transaction dataset (with intentional fraud patterns).**
+- `[/]` **Day 6**
+  - `[ ]` Dev 1: Create empty Dashboard container components and routing logic based on user role.
+  - `[ ]` Dev 2: Create Transaction & Merchant Models in the database.
+  - `[x]` Dev 3: **Write Python script to generate the synthetic historical transaction dataset (with intentional fraud patterns).**
 - `[ ]` **Day 7**
   - Dev 1: Implement Tailwind design system (brand colors, fonts, dark mode toggle).
   - Dev 2: Build CRUD APIs for Transactions (with pagination).
