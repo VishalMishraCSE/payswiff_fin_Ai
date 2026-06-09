@@ -41,7 +41,7 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
 @router.post("/login", response_model=Token)
 def login(credentials: UserLogin, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == credentials.email).first()
-    if not user or not verify_password(credentials.password, user.hashed_password):
+    if not user or not verify_password(credentials.password, str(user.hashed_password)):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     user_data = {"sub": user.email, "role": user.role}
