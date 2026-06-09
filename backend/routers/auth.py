@@ -3,7 +3,14 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from database import get_db
 import models
-import auth
+import importlib.util
+import os
+
+# Explicitly load the root auth module to avoid namespace clashes with this file (routers/auth.py)
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+auth_spec = importlib.util.spec_from_file_location("root_auth", os.path.join(parent_dir, "auth.py"))
+auth = importlib.util.module_from_spec(auth_spec)
+auth_spec.loader.exec_module(auth)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
