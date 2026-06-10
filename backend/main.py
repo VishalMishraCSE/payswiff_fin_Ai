@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth
+from routers import auth, transactions
 from auth import RoleChecker, get_current_user
 
 app = FastAPI(title="FinAI Core API", version="1.0.0")
@@ -14,6 +14,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(transactions.router)
 
 @app.get("/")
 def health_check():
