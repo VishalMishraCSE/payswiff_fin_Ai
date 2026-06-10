@@ -1,18 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { 
-  IndianRupee, 
-  CreditCard, 
-  ShieldAlert, 
-  TrendingUp, 
-  ArrowUpRight, 
+import {
+  IndianRupee,
+  CreditCard,
+  ShieldAlert,
+  TrendingUp,
+  ArrowUpRight,
   ArrowDownRight,
-  Search, 
-  Bell, 
-  Settings, 
-  User, 
-  RefreshCw, 
+  Search,
+  Bell,
+  Settings,
+  User,
+  RefreshCw,
   Calendar,
   Filter,
   CheckCircle2,
@@ -20,13 +20,13 @@ import {
   HelpCircle,
   TrendingDown
 } from 'lucide-react';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -89,8 +89,8 @@ export default function MerchantDashboard() {
     }, 800);
   };
 
-  const filteredTransactions = filter === 'All' 
-    ? transactions 
+  const filteredTransactions = filter === 'All'
+    ? transactions
     : transactions.filter(t => t.status === filter);
 
   return (
@@ -113,9 +113,9 @@ export default function MerchantDashboard() {
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
               <Search size={16} />
             </span>
-            <input 
-              type="text" 
-              placeholder="Search payments, customers..." 
+            <input
+              type="text"
+              placeholder="Search payments, customers..."
               className="bg-slate-900/60 border border-slate-800 rounded-full py-1.5 pl-9 pr-4 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 w-64 transition-all"
             />
           </div>
@@ -145,7 +145,7 @@ export default function MerchantDashboard() {
 
       {/* Main Dashboard Layout */}
       <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8">
-        
+
         {/* Header Title with quick Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -156,7 +156,7 @@ export default function MerchantDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={handleRefresh}
               className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 hover:bg-slate-800/80 px-4 py-2 rounded-lg text-sm transition-all text-white-forced active:scale-95"
             >
@@ -172,7 +172,7 @@ export default function MerchantDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          
+
           {/* Revenue Stat */}
           <div className="relative group overflow-hidden bg-slate-900/40 backdrop-blur-md border border-slate-800/80 hover:border-slate-700/80 rounded-2xl p-6 transition-all hover:-translate-y-1 duration-300">
             <div className="absolute top-0 right-0 h-24 w-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all"></div>
@@ -249,7 +249,7 @@ export default function MerchantDashboard() {
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
+
           {/* Revenue Analytics (Line/Area Chart) */}
           <div className="lg:col-span-2 bg-[#0B0F19]/60 backdrop-blur-md border border-slate-800 rounded-2xl p-6 space-y-4">
             <div className="flex items-center justify-between">
@@ -276,7 +276,7 @@ export default function MerchantDashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
                     <XAxis dataKey="name" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} />
                     <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} />
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={{ backgroundColor: '#0B0F19', borderColor: '#1E293B', borderRadius: '12px' }}
                       labelStyle={{ fontWeight: 'bold', color: '#94A3B8' }}
                     />

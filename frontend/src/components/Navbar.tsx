@@ -36,7 +36,7 @@ export default function Navbar() {
       </Link>
       <div className="flex items-center gap-4">
         {/* Theme Toggle Button */}
-        <button 
+        <button
           onClick={toggleTheme}
           className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all active:scale-95 cursor-pointer"
           aria-label="Toggle Theme"

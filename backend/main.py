@@ -15,15 +15,18 @@ app.add_middleware(
 
 app.include_router(auth.router)
 
+
 @app.get("/")
 def health_check():
     return {"status": "ok", "service": "FinAI Backend Running"}
 
+
 @app.get("/analyst-only-data")
-def read_analyst_data(current_user = Depends(RoleChecker(["analyst", "admin"]))):
+def read_analyst_data(current_user=Depends(RoleChecker(["analyst", "admin"]))):
     return {"message": "Welcome, Analyst. Here is the fraud queue metadata."}
+
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

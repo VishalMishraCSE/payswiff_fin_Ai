@@ -35,10 +35,10 @@ This living document breaks down the 8-week (40 working days) implementation pla
   - `[ ]` Dev 1: Create empty Dashboard container components and routing logic based on user role.
   - `[x]` Dev 2: Create Transaction & Merchant Models in the database.
   - `[x]` Dev 3: **Write Python script to generate the synthetic historical transaction dataset (with intentional fraud patterns).**
-- `[ ]` **Day 7**
-  - Dev 1: Implement Tailwind design system (brand colors, fonts, dark mode toggle).
-  - Dev 2: Build CRUD APIs for Transactions (with pagination).
-  - Dev 3: **Generate and insert 100k+ synthetic records into the local PostgreSQL databases for the team.**
+- `[/]` **Day 7**
+  - `[ ]` Dev 1: Implement Tailwind design system (brand colors, fonts, dark mode toggle).
+  - `[ ]` Dev 2: Build CRUD APIs for Transactions (with pagination).
+  - `[x]` Dev 3: **Generate and insert 100k+ synthetic records into the local PostgreSQL databases for the team.**
 - `[ ]` **Day 8**
   - Dev 1: Build UI for the Transaction History data table with client-side sorting.
   - Dev 2: Build CRUD APIs for Merchant Profiles and Settings.

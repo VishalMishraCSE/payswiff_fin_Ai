@@ -7,49 +7,45 @@ from auth import get_password_hash, verify_password, create_access_token, create
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+
 class UserRegister(BaseModel):
     email: EmailStr
     password: str
     role: str = "merchant"
 
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
 
 class Token(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
 
+
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(user_in: UserRegister, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user_in.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+
     hashed_pwd = get_password_hash(user_in.password)
-    new_user = models.User(
-        email=user_in.email,
-        hashed_password=hashed_pwd,
-        role=user_in.role
-    )
+    new_user = models.User(email=user_in.email, hashed_password=hashed_pwd, role=user_in.role)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     return {"message": "User registered successfully", "user_id": new_user.id}
+
 
 @router.post("/login", response_model=Token)
 def login(credentials: UserLogin, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == credentials.email).first()
     if not user or not verify_password(credentials.password, str(user.hashed_password)):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-    
+
     user_data = {"sub": user.email, "role": user.role}
     access_token = create_access_token(user_data)
     refresh_token = create_refresh_token(user_data)
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer"
-    }
-
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}

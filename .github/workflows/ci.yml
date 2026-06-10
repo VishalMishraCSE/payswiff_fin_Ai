@@ -18,7 +18,7 @@ jobs:
           cd backend
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          
+
   frontend-build:
     runs-on: ubuntu-latest
     steps:

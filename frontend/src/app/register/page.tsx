@@ -18,12 +18,12 @@ export default function RegisterPage() {
       <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-8 shadow-lg">
         <h2 className="text-2xl font-bold text-center text-teal-400">Create Account</h2>
         <p className="mt-2 text-center text-sm text-slate-400">Register your merchant or team account</p>
-        
+
         <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit}>
           <div>
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Email Address</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               required
               className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
               value={email}
@@ -32,8 +32,8 @@ export default function RegisterPage() {
           </div>
           <div>
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Password</label>
-            <input 
-              type="password" 
+            <input
+              type="password"
               required
               className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
               value={password}
