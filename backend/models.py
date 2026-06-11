@@ -46,3 +46,14 @@ class Transaction(Base):
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     merchant = relationship("Merchant", back_populates="transactions")
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    method = Column(String, nullable=False)  # POST / PATCH / DELETE
+    path = Column(String, nullable=False)  # /transactions, /merchants/:id
+    user_email = Column(String, nullable=True)
+    status_code = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
