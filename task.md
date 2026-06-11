@@ -39,10 +39,10 @@ This living document breaks down the 8-week (40 working days) implementation pla
   - `[ ]` Dev 1: Implement Tailwind design system (brand colors, fonts, dark mode toggle).
   - `[x]` Dev 2: Build CRUD APIs for Transactions (with pagination).
   - `[x]` Dev 3: **Generate and insert 100k+ synthetic records into the local PostgreSQL databases for the team.**
-- `[ ]` **Day 8**
-  - Dev 1: Build UI for the Transaction History data table with client-side sorting.
-  - Dev 2: Build CRUD APIs for Merchant Profiles and Settings.
-  - Dev 3: Begin writing basic data ingestion pipeline connecting DB to ML environment.
+- `[/]` **Day 8**
+  - `[ ]` Dev 1: Build UI for the Transaction History data table with client-side sorting.
+  - `[ ]` Dev 2: Build CRUD APIs for Merchant Profiles and Settings.
+  - `[x]` Dev 3: Audit Logging Middleware Setup (AuditLog model, middleware/audit.py, and main.py registration).
 - `[ ]` **Day 9**
   - Dev 1: Connect Transaction Table UI to Backend APIs.
   - Dev 2: Implement global Audit Logging middleware for all state-changing API requests.
