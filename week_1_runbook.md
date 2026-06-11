@@ -31,8 +31,8 @@ Since you are starting on fresh machines, you must download and install these co
 ### 📥 Step 2: Clone the Repository
 Open your terminal, navigate to where you want the project stored, and run:
 ```bash
-git clone https://github.com/VishalMishraCSE/payswiff_fin_Ai.git
-cd payswiff_fin_Ai
+git clone https://github.com/VishalMishraCSE/FinAi.git
+cd FinAi
 ```
 
 ### 💻 Step 3: Open in Antigravity IDE
@@ -63,7 +63,7 @@ This ensures everyone gets the latest backend/frontend/infra code and stays perf
 **Goal:** Initialize Next.js and create the base folder structure.
 
 **Step 1: Run the initialization command**
-Open your terminal at the root of the repository (`c:\Users\pc\Desktop\FinAI\payswiff_fin_Ai`) and run exactly this:
+Open your terminal at the root of the repository (`c:\Users\pc\Desktop\FinAI\FinAi`) and run exactly this:
 ```bash
 npx create-next-app@latest frontend --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --use-npm
 ```

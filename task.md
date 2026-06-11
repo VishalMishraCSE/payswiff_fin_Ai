@@ -25,24 +25,24 @@ This living document breaks down the 8-week (40 working days) implementation pla
   - Dev 1: Build Login/Register and MFA UI screens.
   - Dev 2: Create Authentication API endpoints (Login, Register, Token Refresh).
   - Dev 3: Configure pre-commit hooks (Black, Flake8, Prettier) to enforce code standards.
-- `[/]` **Day 5**
-  - `[ ]` Dev 1: Integrate UI with Auth API, store JWT securely in HTTP-only cookies.
+- `[x]` **Day 5**
+  - `[x]` Dev 1: Integrate UI with Auth API, store JWT securely in HTTP-only cookies.
   - `[x]` Dev 2: Implement Role-Based Access Control (RBAC) middleware for API routes.
   - `[x]` Dev 3: Finalize CI/CD pipeline, create Pull Request templates, and review Git workflow with the team.
 
 ## Week 2: Core Data & Mocking
-- `[/]` **Day 6**
-  - `[ ]` Dev 1: Create empty Dashboard container components and routing logic based on user role.
+- `[x]` **Day 6**
+  - `[x]` Dev 1: Create empty Dashboard container components and routing logic based on user role.
   - `[x]` Dev 2: Create Transaction & Merchant Models in the database.
   - `[x]` Dev 3: **Write Python script to generate the synthetic historical transaction dataset (with intentional fraud patterns).**
-- `[/]` **Day 7**
-  - `[ ]` Dev 1: Implement Tailwind design system (brand colors, fonts, dark mode toggle).
+- `[x]` **Day 7**
+  - `[x]` Dev 1: Implement Tailwind design system (brand colors, fonts, dark mode toggle).
   - `[x]` Dev 2: Build CRUD APIs for Transactions (with pagination).
   - `[x]` Dev 3: **Generate and insert 100k+ synthetic records into the local PostgreSQL databases for the team.**
-- `[ ]` **Day 8**
-  - Dev 1: Build UI for the Transaction History data table with client-side sorting.
-  - Dev 2: Build CRUD APIs for Merchant Profiles and Settings.
-  - Dev 3: Begin writing basic data ingestion pipeline connecting DB to ML environment.
+- `[/]` **Day 8**
+  - `[x]` Dev 1: Build UI for the Transaction History data table with client-side sorting.
+  - `[ ]` Dev 2: Build CRUD APIs for Merchant Profiles and Settings.
+  - `[x]` Dev 3: Audit Logging Middleware Setup (AuditLog model, middleware/audit.py, and main.py registration).
 - `[ ]` **Day 9**
   - Dev 1: Connect Transaction Table UI to Backend APIs.
   - Dev 2: Implement global Audit Logging middleware for all state-changing API requests.

@@ -32,6 +32,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import TransactionTable from "@/components/TransactionTable";
 
 // Mock data for sales trend
 const revenueData = [
@@ -51,19 +52,8 @@ const statusData = [
   { name: 'Failed', value: 120, color: '#EF4444' },
 ];
 
-// Mock transactions
-const initialTransactions = [
-  { id: 'TXN-90218', customer: 'John Miller', email: 'john@example.com', amount: '₹12,450.00', status: 'Success', method: 'UPI', date: 'Just now' },
-  { id: 'TXN-90217', customer: 'Anita Sharma', email: 'anita.s@example.com', amount: '₹48,900.00', status: 'Success', method: 'NetBanking', date: '5 mins ago' },
-  { id: 'TXN-90216', customer: 'David Vance', email: 'david@example.com', amount: '₹1,200.00', status: 'Pending', method: 'Card', date: '12 mins ago' },
-  { id: 'TXN-90215', customer: 'Priyan Sen', email: 'priya@example.com', amount: '₹9,800.00', status: 'Failed', method: 'UPI', date: '30 mins ago' },
-  { id: 'TXN-90214', customer: 'Markus K.', email: 'markus@example.com', amount: '₹22,000.00', status: 'Success', method: 'Card', date: '1 hour ago' },
-];
-
 export default function MerchantDashboard() {
-  const [filter, setFilter] = useState<'All' | 'Success' | 'Pending' | 'Failed'>('All');
   const [refreshing, setRefreshing] = useState(false);
-  const [transactions, setTransactions] = useState(initialTransactions);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -73,25 +63,9 @@ export default function MerchantDashboard() {
   const handleRefresh = () => {
     setRefreshing(true);
     setTimeout(() => {
-      // Add a random simulated new transaction
-      const randomIds = Math.floor(10000 + Math.random() * 90000);
-      const newTxn = {
-        id: `TXN-${randomIds}`,
-        customer: 'Suresh Kumar',
-        email: 'suresh.k@example.com',
-        amount: `₹${(Math.random() * 50000 + 500).toFixed(2)}`,
-        status: Math.random() > 0.15 ? 'Success' : 'Failed',
-        method: Math.random() > 0.5 ? 'UPI' : 'Card',
-        date: '1 sec ago'
-      };
-      setTransactions([newTxn, ...transactions.slice(0, 4)]);
       setRefreshing(false);
     }, 800);
   };
-
-  const filteredTransactions = filter === 'All'
-    ? transactions
-    : transactions.filter(t => t.status === filter);
 
   return (
     <div className="min-h-screen bg-[#080B11] text-slate-100 flex flex-col font-sans">
@@ -343,78 +317,8 @@ export default function MerchantDashboard() {
 
         </div>
 
-        {/* Recent Transactions List */}
-        <div className="bg-[#0B0F19]/60 backdrop-blur-md border border-slate-800 rounded-2xl p-6 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h3 className="font-bold text-lg text-slate-100">Recent Transactions</h3>
-              <p className="text-xs text-slate-400">Real-time listing of incoming customer payments</p>
-            </div>
-
-            {/* Filter Tabs */}
-            <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-1 rounded-xl text-xs text-slate-400 self-start">
-              {(['All', 'Success', 'Pending', 'Failed'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setFilter(tab)}
-                  className={`px-3 py-1.5 rounded-lg font-medium transition-all ${filter === tab ? 'bg-indigo-600 text-white-forced' : 'hover:text-slate-100'}`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  <th className="pb-3 pl-2">Transaction ID</th>
-                  <th className="pb-3">Customer</th>
-                  <th className="pb-3">Date</th>
-                  <th className="pb-3">Payment Method</th>
-                  <th className="pb-3">Amount</th>
-                  <th className="pb-3 pr-2 text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/50">
-                {filteredTransactions.map((txn, index) => (
-                  <tr key={index} className="group hover:bg-slate-900/30 transition-all">
-                    <td className="py-4 pl-2 font-mono text-xs text-indigo-400">{txn.id}</td>
-                    <td className="py-4">
-                      <div className="text-xs font-semibold text-slate-200">{txn.customer}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">{txn.email}</div>
-                    </td>
-                    <td className="py-4 text-xs text-slate-400">{txn.date}</td>
-                    <td className="py-4 text-xs text-slate-300 font-medium">{txn.method}</td>
-                    <td className="py-4 text-xs text-slate-100 font-bold">{txn.amount}</td>
-                    <td className="py-4 pr-2 text-right">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                        txn.status === 'Success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                        txn.status === 'Pending' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                        'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                      }`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${
-                          txn.status === 'Success' ? 'bg-emerald-400' :
-                          txn.status === 'Pending' ? 'bg-amber-400' :
-                          'bg-rose-400'
-                        }`}></span>
-                        {txn.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                {filteredTransactions.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center text-xs text-slate-400">
-                      No transactions found matching the filter.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {/* Dynamic Transaction Table Integration */}
+        <TransactionTable />
 
       </main>
     </div>
