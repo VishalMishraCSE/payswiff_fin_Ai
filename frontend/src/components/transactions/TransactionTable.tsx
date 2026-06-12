@@ -1,29 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
-type Transaction = {
-  id: string;
-  date: string;
+export type Transaction = {
+  id: number;
+  reference_id: string;
+  merchant_id: number;
+  customer_name: string;
+  customer_email: string;
   amount: number;
-  status: "Completed" | "Pending" | "Failed";
-  merchant: string;
+  currency: string;
+  status: string;
+  payment_method: string;
+  is_fraud: boolean;
+  fraud_score: number;
+  created_at: string;
 };
 
+// Fallback mock data if API fails or returns empty
 const mockData: Transaction[] = [
-  { id: "TXN-101", date: "2023-10-27T10:30:00Z", amount: 150.5, status: "Completed", merchant: "Amazon" },
-  { id: "TXN-102", date: "2023-10-27T14:45:00Z", amount: 25.0, status: "Pending", merchant: "Starbucks" },
-  { id: "TXN-103", date: "2023-10-26T09:15:00Z", amount: 1200.0, status: "Completed", merchant: "Apple Store" },
-  { id: "TXN-104", date: "2023-10-26T18:20:00Z", amount: 45.75, status: "Failed", merchant: "Uber" },
-  { id: "TXN-105", date: "2023-10-25T11:00:00Z", amount: 89.99, status: "Completed", merchant: "Netflix" },
-  { id: "TXN-106", date: "2023-10-24T16:30:00Z", amount: 350.0, status: "Completed", merchant: "Nike" },
-  { id: "TXN-107", date: "2023-10-24T08:10:00Z", amount: 12.5, status: "Pending", merchant: "McDonalds" },
+  { id: 101, reference_id: "REF123", merchant_id: 1, customer_name: "John Doe", customer_email: "john@example.com", amount: 150.5, currency: "USD", status: "Success", payment_method: "Card", is_fraud: false, fraud_score: 0.01, created_at: "2023-10-27T10:30:00Z" },
 ];
 
-export function TransactionTable() {
-  const [data, setData] = useState<Transaction[]>(mockData);
+export function TransactionTable({ initialData = [] }: { initialData?: Transaction[] }) {
+  const [data, setData] = useState<Transaction[]>(initialData.length > 0 ? initialData : mockData);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Transaction; direction: "asc" | "desc" } | null>(null);
+
+  useEffect(() => {
+    if (initialData.length > 0) {
+      setData(initialData);
+    }
+  }, [initialData]);
 
   const handleSort = (key: keyof Transaction) => {
     let direction: "asc" | "desc" = "asc";
@@ -63,13 +71,13 @@ export function TransactionTable() {
           <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200">
             <tr>
               <th className="p-4 font-semibold cursor-pointer select-none" onClick={() => handleSort("id")}>
-                <div className="flex items-center">Transaction ID {getSortIcon("id")}</div>
+                <div className="flex items-center">Txn ID {getSortIcon("id")}</div>
               </th>
-              <th className="p-4 font-semibold cursor-pointer select-none" onClick={() => handleSort("date")}>
-                <div className="flex items-center">Date & Time {getSortIcon("date")}</div>
+              <th className="p-4 font-semibold cursor-pointer select-none" onClick={() => handleSort("created_at")}>
+                <div className="flex items-center">Date & Time {getSortIcon("created_at")}</div>
               </th>
-              <th className="p-4 font-semibold cursor-pointer select-none" onClick={() => handleSort("merchant")}>
-                <div className="flex items-center">Merchant {getSortIcon("merchant")}</div>
+              <th className="p-4 font-semibold cursor-pointer select-none" onClick={() => handleSort("customer_name")}>
+                <div className="flex items-center">Customer {getSortIcon("customer_name")}</div>
               </th>
               <th className="p-4 font-semibold cursor-pointer select-none" onClick={() => handleSort("amount")}>
                 <div className="flex items-center">Amount {getSortIcon("amount")}</div>
@@ -82,16 +90,16 @@ export function TransactionTable() {
           <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
             {data.map((txn) => (
               <tr key={txn.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/25 transition-colors">
-                <td className="p-4 font-medium text-slate-900 dark:text-white">{txn.id}</td>
-                <td className="p-4">{new Date(txn.date).toLocaleString()}</td>
-                <td className="p-4">{txn.merchant}</td>
+                <td className="p-4 font-medium text-slate-900 dark:text-white">#{txn.id}</td>
+                <td className="p-4">{new Date(txn.created_at).toLocaleString()}</td>
+                <td className="p-4">{txn.customer_name}</td>
                 <td className="p-4 font-medium text-slate-900 dark:text-white">
                   ${txn.amount.toFixed(2)}
                 </td>
                 <td className="p-4">
                   <span
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      txn.status === "Completed"
+                      txn.status === "Success" || txn.status === "Completed"
                         ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400"
                         : txn.status === "Pending"
                         ? "bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400"
@@ -103,6 +111,13 @@ export function TransactionTable() {
                 </td>
               </tr>
             ))}
+            {data.length === 0 && (
+              <tr>
+                <td colSpan={5} className="p-8 text-center text-slate-500">
+                  No transactions found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -1,6 +1,33 @@
+import { cookies } from "next/headers";
 import { TransactionTable } from "@/components/transactions/TransactionTable";
 
-export default function TransactionsPage() {
+async function getTransactions() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value;
+
+  if (!token) return [];
+
+  try {
+    const res = await fetch("http://localhost:8000/transactions", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) return [];
+    
+    const data = await res.json();
+    return data.items || [];
+  } catch (error) {
+    console.error("Failed to fetch transactions", error);
+    return [];
+  }
+}
+
+export default async function TransactionsPage() {
+  const transactions = await getTransactions();
+
   return (
     <div className="p-8 animate-fade-in max-w-7xl mx-auto">
       <div className="mb-8">
@@ -10,7 +37,7 @@ export default function TransactionsPage() {
         </p>
       </div>
       
-      <TransactionTable />
+      <TransactionTable initialData={transactions} />
     </div>
   );
 }
