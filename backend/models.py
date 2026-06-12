@@ -23,6 +23,7 @@ class Merchant(Base):
     id = Column(Integer, primary_key=True, index=True)
     business_name = Column(String, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
+    kyc_status = Column(String, default="pending")  # pending, verified, rejected
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     user = relationship("User", back_populates="merchant")
