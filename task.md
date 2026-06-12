@@ -45,7 +45,7 @@ This living document breaks down the 8-week (40 working days) implementation pla
   - `[x]` Dev 3: Audit Logging Middleware Setup (AuditLog model, middleware/audit.py, and main.py registration).
 - `[/]` **Day 9**
   - `[x]` Dev 1: Connect Transaction Table UI to Backend APIs.
-  - Dev 2: Implement global Audit Logging middleware for all state-changing API requests.
+  - `[x]` Dev 2: Implement global Audit Logging middleware for all state-changing API requests.
   - Dev 3: Set up EasyOCR python service locally for testing document reading.
 - `[ ]` **Day 10**
   - Dev 1: Build server-side pagination and filtering for the Transaction Table.
