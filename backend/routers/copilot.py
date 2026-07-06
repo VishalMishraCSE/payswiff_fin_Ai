@@ -5,6 +5,8 @@ import models
 import datetime
 from typing import Dict, Any, List
 import re
+import os
+import requests
 from ml_models import score_transaction_ml
 
 router = APIRouter(prefix="/copilot", tags=["copilot"])
@@ -12,137 +14,243 @@ router = APIRouter(prefix="/copilot", tags=["copilot"])
 # Simple in-memory storage for pending human-in-the-loop approvals
 PENDING_ACTIONS = {}
 
+# Retrieve Gemini API credentials from environment
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+
+
+def call_gemini(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] = None) -> str:
+    """Makes a direct POST request to the Google Gemini API using the new AQ key with retries."""
+    if not GEMINI_API_KEY:
+        return (
+            "⚠ **Gemini API Key is missing.**\n\n"
+            "Please ensure `GEMINI_API_KEY` is set in your backend `.env` file to activate the live Copilot."
+        )
+
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    )
+    headers = {"Content-Type": "application/json"}
+
+    # Format history turns for Gemini
+    contents = []
+    if chat_history:
+        for turn in chat_history:
+            contents.append({"role": turn["role"], "parts": [{"text": turn["text"]}]})
+
+    contents.append({"role": "user", "parts": [{"text": user_message}]})
+
+    payload = {
+        "contents": contents,
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
+        "generationConfig": {"temperature": 0.15},
+    }
+
+    import time
+
+    for attempt in range(4):
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=25)
+            if response.status_code in [429, 503]:
+                print(
+                    f"Gemini API returned status {response.status_code}. Retrying in 2.5s (attempt {attempt + 1}/4)..."
+                )
+                time.sleep(2.5)
+                continue
+
+            if response.status_code != 200:
+                print(f"Gemini API Error details: {response.status_code} - {response.text}")
+                return f"Error: Gemini API responded with code {response.status_code}."
+
+            res_json = response.json()
+            candidates = res_json.get("candidates", [])
+            if candidates:
+                parts = candidates[0].get("content", {}).get("parts", [])
+                if parts:
+                    return parts[0].get("text", "")
+            return "Error: Empty response returned from Gemini."
+        except Exception as e:
+            print(f"Gemini Exception on attempt {attempt + 1}: {e}")
+            if attempt < 3:
+                time.sleep(2.5)
+                continue
+            return f"Error: Failed to request Gemini API: {e}"
+
+    return "Error: Gemini API is temporarily overloaded (503/429)."
+
 
 @router.post("/chat")
 def chat_copilot(payload: Dict[str, Any] = Body(...), db: Session = Depends(get_db)):
     """
-    Main LLM-based Copilot chatbot with tool calling capabilities.
-    Processes natural language queries and returns textual answers, tables, or Action Cards.
+    Main LLM-based Copilot chatbot with live Agentic tool calling capabilities using Gemini.
     """
     message = payload.get("message", "").strip()
     merchant_id = payload.get("merchant_id", 1)
 
-    # 1. Check if the message is requesting an action that requires HITL Approval
-    rate_limit_match = re.search(r"(?:set|change|increase|update)\s+rate\s+limit\s+to\s+(\d+)", message, re.IGNORECASE)
-    if rate_limit_match:
-        new_limit = int(rate_limit_match.group(1))
-        action_id = f"act_{int(datetime.datetime.now().timestamp())}"
+    system_prompt = f"""You are FinAI Copilot, an advanced AI assistant powered by Gemini.
+You have direct read-only access to the database and can execute overrides after human approval.
 
-        PENDING_ACTIONS[action_id] = {
-            "action_id": action_id,
-            "merchant_id": merchant_id,
-            "action_type": "update_rate_limit",
-            "value": new_limit,
-            "description": f"Update API rate limits to {new_limit} req/min",
-        }
+The current merchant has merchant_id = 1.
+Database Tables Schema:
+1. transactions:
+   - id: INTEGER (Primary Key)
+   - reference_id: VARCHAR (Unique transaction ID like 'TXN-LIVE-100234')
+   - merchant_id: INTEGER
+   - customer_name: VARCHAR
+   - customer_email: VARCHAR
+   - amount: FLOAT
+   - currency: VARCHAR ('INR')
+   - status: VARCHAR ('Success', 'Pending', 'Failed')
+   - payment_method: VARCHAR ('Card', 'UPI', 'NetBanking')
+   - is_fraud: BOOLEAN
+   - fraud_score: FLOAT (0.0 to 100.0)
+   - created_at: DATETIME
+2. merchants:
+   - id: INTEGER (Primary Key)
+   - business_name: VARCHAR
+   - user_id: INTEGER
+   - kyc_status: VARCHAR ('pending', 'approved', 'rejected')
+   - merchant_settings:
+   - id: INTEGER (Primary key)
+   - merchant_id: INTEGER
+   - rate_limit_per_min: INTEGER
 
-        return {
-            "sender": "ai",
-            "message": f"I detect that you want to change your API rate limit to **{new_limit} requests/minute**. Since this is a critical security configuration, it requires your explicit confirmation.",
-            "action_pending": True,
-            "action_card": {
-                "action_id": action_id,
-                "title": "Authorize API Configuration Change",
-                "description": f"Increase API rate limits from current standard (100 req/min) to {new_limit} req/min. This action will be logged in the immutable audit ledger.",
-                "confirm_label": "Approve Change",
-                "cancel_label": "Cancel Request",
-            },
-        }
+Available Agentic Tools:
+1. SQL Query Tool: Query the database. To do this, emit exactly:
+   [SQL: <SELECT statement>]
+   Example: [SQL: SELECT COUNT(*) FROM transactions WHERE status = 'Failed' AND merchant_id = 1]
+   - The query MUST be read-only (starting with SELECT) and limited to tables: transactions, merchants, merchant_settings, audit_logs.
+   - Do NOT run INSERT, UPDATE, DELETE, or DROP.
+2. Inspect Transaction Tool: Retrieve security details and SHAP explanation factors. To do this, emit exactly:
+   [INSPECT: <id_or_reference_id>]
+   Example: [INSPECT: TXN-LIVE-123456]
+3. Update Rate Limit Tool: Request security rate limit updates. To do this, emit exactly:
+   [ACTION: UPDATE_RATE_LIMIT, value: <integer>]
+   Example: [ACTION: UPDATE_RATE_LIMIT, value: 300]
+   - Emitting this will immediately prompt the user for human confirmation (HITL).
 
-    # 2. Check if the message is inquiring about failed UPI payments
-    if "failed upi" in message.lower() or "upi failed" in message.lower():
-        # Query failed UPI transactions
-        results = (
-            db.query(models.Transaction)
-            .filter(models.Transaction.payment_method == "UPI")
-            .filter(models.Transaction.status == "Failed")
-            .order_by(models.Transaction.created_at.desc())
-            .limit(5)
-            .all()
+Guidelines:
+- When you emit a tool tag, do not include any other conversational text in that turn. Just output the tag itself.
+- If you receive a tool output, integrate and summarize the findings for the user using beautiful Markdown lists, bolding, and tables.
+"""
+
+    chat_history = []
+    current_user_msg = message
+
+    # Multi-turn tool calling loop (max 4 iterations to prevent loops)
+    for iteration in range(4):
+        ai_response = call_gemini(system_prompt, current_user_msg, chat_history)
+        ai_response_clean = ai_response.strip()
+
+        # 1. Action Tool: Update Settings (HITL)
+        rate_limit_match = re.search(
+            r"\[ACTION:\s*UPDATE_RATE_LIMIT,\s*value:\s*(\d+)\]", ai_response_clean, re.IGNORECASE
         )
+        if rate_limit_match:
+            new_limit = int(rate_limit_match.group(1))
+            action_id = f"act_{int(datetime.datetime.now().timestamp())}"
 
-        if not results:
-            return {
-                "sender": "ai",
-                "message": "I checked our ledger, and there are no failed UPI transactions logged in the past 90 days. All systems are operating smoothly.",
+            PENDING_ACTIONS[action_id] = {
+                "action_id": action_id,
+                "merchant_id": merchant_id,
+                "action_type": "update_rate_limit",
+                "value": new_limit,
+                "description": f"Update API rate limits to {new_limit} req/min",
             }
 
-        # Format a gorgeous markdown table response
-        md_table = "| ID | Customer | Amount | Date |\n| :--- | :--- | :--- | :--- |\n"
-        for txn in results:
-            formatted_date = txn.created_at.strftime("%b %d, %H:%M")
-            md_table += f"| `#{txn.id}` | {txn.customer_name} | ₹{txn.amount:.2f} | {formatted_date} |\n"
-
-        return {
-            "sender": "ai",
-            "message": f"### `[AgenticAI] query_database_tool` Result\nI retrieved the most recent failed UPI payments from your database:\n\n{md_table}\n\nWould you like me to inspect any of these transactions for anomalies?",
-        }
-
-    # 3. Check if the message is requesting inspection of a transaction
-    inspect_match = re.search(r"inspect\s+(?:transaction\s+)?(TXN-\d+|#?\d+)", message, re.IGNORECASE)
-    if inspect_match:
-        txn_id_str = inspect_match.group(1).replace("#", "")
-
-        # Search by ID or reference
-        if txn_id_str.startswith("TXN-"):
-            txn = db.query(models.Transaction).filter(models.Transaction.reference_id == txn_id_str).first()
-        else:
-            try:
-                txn = db.query(models.Transaction).filter(models.Transaction.id == int(txn_id_str)).first()
-            except ValueError:
-                txn = None
-
-        if not txn:
             return {
                 "sender": "ai",
-                "message": f"I could not find transaction `{txn_id_str}` in the database. Please verify the ID and try again.",
+                "message": f"I detect that you want to change your API rate limit to **{new_limit} requests/minute**. Since this is a critical security configuration, it requires your explicit confirmation.",
+                "action_pending": True,
+                "action_card": {
+                    "action_id": action_id,
+                    "title": "Authorize API Configuration Change",
+                    "description": f"Increase API rate limits from current standard (100 req/min) to {new_limit} req/min. This action will be logged in the database audit log.",
+                    "confirm_label": "Approve Change",
+                    "cancel_label": "Cancel Request",
+                },
             }
 
-        # Get simulated SHAP parameters
-        hour = txn.created_at.hour
-        scoring_details = score_transaction_ml(txn.amount, txn.payment_method, hour)
+        # 2. Database Query Tool (SQL)
+        sql_match = re.search(r"\[SQL:\s*(SELECT.*?)(?=\])\]", ai_response_clean, re.IGNORECASE | re.DOTALL)
+        if sql_match:
+            sql_query = sql_match.group(1).strip()
+            is_safe = sql_query.upper().startswith("SELECT") and not any(
+                kw in sql_query.upper() for kw in ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE"]
+            )
 
-        # Format the SHAP factors
-        shap_factors = ""
-        for factor, contribution in scoring_details["shap_values"].items():
-            color = "🔴" if contribution > 0 else "🟢"
-            sign = "+" if contribution > 0 else ""
-            shap_factors += f"- {color} **{factor}**: {sign}{contribution}%\n"
+            if not is_safe:
+                observation = "Error: Only read-only SELECT queries are allowed."
+            else:
+                try:
+                    from sqlalchemy import text
 
-        ai_msg = f"""### `[GenAI] Conversational Anomaly Explainer`
-Here are the security audit details for transaction **#{txn.id}** (`{txn.reference_id}`):
+                    result = db.execute(text(sql_query))
+                    columns = list(result.keys())
+                    rows = result.fetchall()
 
-- **Customer:** {txn.customer_name} ({txn.customer_email})
-- **Amount:** ₹{txn.amount:.2f}
-- **Payment Method:** {txn.payment_method}
-- **Status:** `{txn.status}`
-- **Security Health classification:** **{scoring_details["classification"]}**
+                    if not rows:
+                        observation = "Query executed successfully. Result: 0 rows found."
+                    else:
+                        # Format as clean markdown table
+                        header = "| " + " | ".join(columns) + " |\n"
+                        divider = "| " + " | ".join(["---"] * len(columns)) + " |\n"
+                        md_rows = ""
+                        for r in rows:
+                            md_rows += "| " + " | ".join(str(val) for val in r) + " |\n"
+                        observation = f"Database output:\n{header}{divider}{md_rows}"
+                except Exception as e:
+                    observation = f"Error executing SQL: {str(e)}"
 
-#### SHAP Feature Contributions:
+            # Append conversational turns to Gemini context and loop
+            chat_history.append({"role": "user", "text": current_user_msg})
+            chat_history.append({"role": "model", "text": ai_response_clean})
+            current_user_msg = f"Tool Output:\n{observation}"
+            continue
+
+        # 3. Anomaly Scorer / Inspection Tool
+        inspect_match = re.search(r"\[INSPECT:\s*(\S+?)(?=\])\]", ai_response_clean, re.IGNORECASE)
+        if inspect_match:
+            txn_ref = inspect_match.group(1).replace("#", "").strip()
+
+            # Find by ID or reference
+            if txn_ref.startswith("TXN-"):
+                txn = db.query(models.Transaction).filter(models.Transaction.reference_id == txn_ref).first()
+            else:
+                try:
+                    txn = db.query(models.Transaction).filter(models.Transaction.id == int(txn_ref)).first()
+                except ValueError:
+                    txn = None
+
+            if not txn:
+                observation = f"Transaction `{txn_ref}` not found in the database."
+            else:
+                scoring_details = score_transaction_ml(txn.amount, txn.payment_method, txn.created_at.hour)
+                shap_factors = ""
+                for factor, contribution in scoring_details["shap_values"].items():
+                    sign = "+" if contribution > 0 else ""
+                    shap_factors += f"- **{factor}**: {sign}{contribution}%\n"
+
+                observation = f"""Security audit details for transaction #{txn.id} ({txn.reference_id}):
+- Customer: {txn.customer_name} ({txn.customer_email})
+- Amount: ₹{txn.amount:.2f}
+- Payment Method: {txn.payment_method}
+- Status: {txn.status}
+- Fraud Probability: {scoring_details["fraud_score"]}%
+- Security Classification: {scoring_details["classification"]}
+- SHAP Feature Contributions:
 {shap_factors}
+"""
 
-**AI Recommendation:** The transaction exhibits a fraud probability of **{scoring_details["fraud_score"]}%**. {"It should be reviewed immediately by a compliance auditor." if scoring_details["is_fraud"] else "No security actions are required."}"""
+            chat_history.append({"role": "user", "text": current_user_msg})
+            chat_history.append({"role": "model", "text": ai_response_clean})
+            current_user_msg = f"Tool Output:\n{observation}"
+            continue
 
-        return {"sender": "ai", "message": ai_msg}
+        # 4. Standard Text response
+        return {"sender": "ai", "message": ai_response_clean}
 
-    # 4. Standard conversational responses (GenAI summary)
-    if "revenue" in message.lower() or "report" in message.lower():
-        return {
-            "sender": "ai",
-            "message": """### `[GenAI] Performance Overview`
-Here is a generative summary of your store's performance:
-
-*   **Total Sales:** Your overall volume is stable, with card payments registering a **12% growth** this week.
-*   **Peak Hours:** Settlement volumes peak between **2:00 PM and 5:00 PM**, driven heavily by UPI QR scans.
-*   **Failure Analysis:** UPI has a success rate of **98.2%**, while NetBanking failures account for **85%** of payment declines due to bank server timeouts.
-*   **Recommendation:** Activating standard rate limit configurations will reduce spam payment requests by up to **40%**.""",
-        }
-
-    # Default fallback greeting
-    return {
-        "sender": "ai",
-        "message": f"Hello! I am your **FinAI Copilot**. I have access to `[AgenticAI]` tools and `[GenAI]` reasoning. You can ask me to:\n\n1. Check database records (e.g. *'Show me failed UPI payments'*)\n2. Perform audit operations (e.g. *'Inspect transaction #105'*)\n3. Configure account settings (e.g. *'Set rate limit to 300 requests/minute'*)",
-    }
+    # Fallback if loops exceeded
+    return {"sender": "ai", "message": ai_response}
 
 
 @router.post("/approve")
@@ -184,5 +292,5 @@ def approve_action(payload: Dict[str, Any] = Body(...), db: Session = Depends(ge
 
     return {
         "status": "success",
-        "message": f"Successfully authorized settings change! Current API rate limit is updated to **{new_limit} req/min** in PostgreSQL. Immutable audit log recorded.",
+        "message": f"Successfully authorized settings change! Current API rate limit is updated to **{new_limit} req/min** in database. Immutable audit log recorded.",
     }
