@@ -127,47 +127,174 @@ export default function CopilotPage() {
     { text: "Generate performance summary", icon: Sparkles }
   ];
 
-  // Helper to render markdown-like lists and bold texts
-  const renderText = (text: string) => {
-    return text.split("\n").map((line, index) => {
-      let content = line;
+  const renderLineElement = (line: string, index: number) => {
+    let content = line;
 
-      // Parse markdown-style titles
-      if (content.startsWith("### ")) {
-        return <h3 key={index} className="text-base font-bold text-slate-900 dark:text-white mt-4 mb-2">{content.replace("### ", "")}</h3>;
-      }
-      if (content.startsWith("#### ")) {
-        return <h4 key={index} className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-3 mb-1">{content.replace("#### ", "")}</h4>;
-      }
+    // Parse markdown-style titles
+    if (content.startsWith("### ")) {
+      return <h3 key={index} className="text-base font-bold text-slate-900 dark:text-white mt-4 mb-2">{content.replace("### ", "")}</h3>;
+    }
+    if (content.startsWith("#### ")) {
+      return <h4 key={index} className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-3 mb-1">{content.replace("#### ", "")}</h4>;
+    }
 
-      // Parse list items
-      const isListItem = content.startsWith("* ") || content.startsWith("- ");
-      if (isListItem) {
-        content = content.substring(2);
-      }
+    // Parse list items
+    const isListItem = content.startsWith("* ") || content.startsWith("- ");
+    if (isListItem) {
+      content = content.substring(2);
+    }
 
-      // Replace markdown-style bold **text**
-      const parts = content.split(/\*\*(.*?)\*\*/g);
-      const renderedLine = parts.map((part, idx) => {
-        if (idx % 2 === 1) {
-          return <strong key={idx} className="font-extrabold text-indigo-600 dark:text-indigo-400">{part}</strong>;
+    // Replace markdown-style bold **text**
+    const parts = content.split(/\*\*(.*?)\*\*/g);
+    const renderedLine = parts.map((part, idx) => {
+      if (idx % 2 === 1) {
+        return <strong key={idx} className="font-extrabold text-indigo-600 dark:text-indigo-400">{part}</strong>;
+      }
+      // Check for inline codes like `code`
+      const codeParts = part.split(/`(.*?)`/g);
+      return codeParts.map((subPart, subIdx) => {
+        if (subIdx % 2 === 1) {
+          return <code key={subIdx} className="bg-slate-100 dark:bg-slate-800 text-rose-500 px-1.5 py-0.5 rounded font-mono text-xs">{subPart}</code>;
         }
-        // Check for inline codes like `code`
-        const codeParts = part.split(/`(.*?)`/g);
-        return codeParts.map((subPart, subIdx) => {
-          if (subIdx % 2 === 1) {
-            return <code key={subIdx} className="bg-slate-100 dark:bg-slate-800 text-rose-500 px-1.5 py-0.5 rounded font-mono text-xs">{subPart}</code>;
-          }
-          return subPart;
-        });
+        return subPart;
+      });
+    });
+
+    if (isListItem) {
+      return <li key={index} className="ml-4 list-disc text-sm text-slate-700 dark:text-slate-350 leading-relaxed">{renderedLine}</li>;
+    }
+
+    if (!content.trim()) return null;
+
+    return <p key={index} className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-1.5 min-h-[1rem]">{renderedLine}</p>;
+  };
+
+  const renderMessageBody = (text: string) => {
+    const lines = text.split("\n");
+    const elements: React.ReactNode[] = [];
+    let inTable = false;
+    let tableRows: string[] = [];
+
+    const flushTable = (key: string | number) => {
+      if (tableRows.length === 0) return;
+
+      const headers = tableRows[0].split("|").slice(1, -1).map(s => s.trim());
+
+      let startIndex = 1;
+      if (tableRows.length > 1) {
+        const secondRowClean = tableRows[1].replace(/\s/g, "");
+        if (/^[|:-]+$/.test(secondRowClean)) {
+          startIndex = 2;
+        }
+      }
+
+      const dataRows = tableRows.slice(startIndex).map(row => {
+        return row.split("|").slice(1, -1).map(s => s.trim());
       });
 
-      if (isListItem) {
-        return <li key={index} className="ml-4 list-disc text-sm text-slate-700 dark:text-slate-350 leading-relaxed">{renderedLine}</li>;
-      }
+      elements.push(
+        <div key={`table-${key}`} className="my-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-850 text-xs text-left">
+            <thead className="bg-slate-50 dark:bg-slate-900/50">
+              <tr>
+                {headers.map((h, i) => (
+                  <th key={i} className="px-4 py-3 font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-850 bg-white dark:bg-slate-950/20">
+              {dataRows.map((row, rowIdx) => (
+                <tr key={rowIdx} className="hover:bg-slate-50/50 dark:hover:bg-[#0c111e] transition-colors">
+                  {row.map((cell, cellIdx) => {
+                    const headerName = headers[cellIdx]?.toLowerCase() || "";
 
-      return <p key={index} className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-1.5 min-h-[1rem]">{renderedLine}</p>;
-    });
+                    if (headerName === "status") {
+                      const isSuccess = cell.toLowerCase() === "success";
+                      const isFailed = cell.toLowerCase() === "failed";
+                      const isPending = cell.toLowerCase() === "pending";
+                      let badgeClass = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+                      if (isSuccess) badgeClass = "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400";
+                      if (isFailed) badgeClass = "bg-rose-100 text-rose-800 dark:bg-rose-500/10 dark:text-rose-400";
+                      if (isPending) badgeClass = "bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400";
+
+                      return (
+                        <td key={cellIdx} className="px-4 py-3 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeClass}`}>
+                            {cell}
+                          </span>
+                        </td>
+                      );
+                    }
+
+                    if (headerName.includes("fraud")) {
+                      const score = parseFloat(cell);
+                      if (!isNaN(score)) {
+                        const isHigh = score > 0.5;
+                        const isMid = score > 0.2 && score <= 0.5;
+                        let badgeClass = "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400";
+                        if (isHigh) badgeClass = "bg-rose-100 text-rose-800 dark:bg-rose-500/10 dark:text-rose-400";
+                        if (isMid) badgeClass = "bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400";
+                        return (
+                          <td key={cellIdx} className="px-4 py-3 whitespace-nowrap font-mono font-bold">
+                            <span className={`px-1.5 py-0.5 rounded ${badgeClass}`}>
+                              {(score * 100).toFixed(0)}%
+                            </span>
+                          </td>
+                        );
+                      }
+                    }
+
+                    if (headerName.includes("amount")) {
+                      return (
+                        <td key={cellIdx} className="px-4 py-3 whitespace-nowrap font-semibold text-slate-900 dark:text-white">
+                          {cell.startsWith("₹") || cell.startsWith("$") ? cell : `₹${cell}`}
+                        </td>
+                      );
+                    }
+
+                    return (
+                      <td key={cellIdx} className="px-4 py-3 text-slate-600 dark:text-slate-350">
+                        {cell}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      tableRows = [];
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const isTableLine = line.trim().startsWith("|") && line.trim().endsWith("|");
+
+      if (isTableLine) {
+        if (!inTable) {
+          inTable = true;
+        }
+        tableRows.push(line.trim());
+      } else {
+        if (inTable) {
+          flushTable(i);
+          inTable = false;
+        }
+        const rendered = renderLineElement(line, i);
+        if (rendered) {
+          elements.push(rendered);
+        }
+      }
+    }
+
+    if (inTable) {
+      flushTable(lines.length);
+    }
+
+    return elements;
   };
 
   return (
@@ -212,9 +339,9 @@ export default function CopilotPage() {
                   <div className={`p-4 rounded-2xl text-left border ${
                     msg.sender === "user"
                       ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/10"
-                      : "bg-slate-50 dark:bg-slate-900/30 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-800/50"
+                      : "bg-slate-55 dark:bg-slate-900/30 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-800/50"
                   }`}>
-                    {renderText(msg.text)}
+                    {renderMessageBody(msg.text)}
                   </div>
 
                   {/* Human-in-the-loop Action Card */}

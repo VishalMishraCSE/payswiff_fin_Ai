@@ -14,8 +14,71 @@ router = APIRouter(prefix="/copilot", tags=["copilot"])
 # Simple in-memory storage for pending human-in-the-loop approvals
 PENDING_ACTIONS = {}
 
-# Retrieve Gemini API credentials from environment
+# Retrieve API credentials from environment
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
+
+
+def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] = None) -> str:
+    """Makes a direct POST request to NVIDIA API Catalog (OpenAI-compatible) with retries."""
+    if not NVIDIA_API_KEY:
+        return (
+            "⚠ **NVIDIA API Key is missing.**\n\n"
+            "Please ensure `NVIDIA_API_KEY` is set in your backend `.env` file to activate the live Copilot."
+        )
+
+    url = "https://integrate.api.nvidia.com/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {NVIDIA_API_KEY}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+
+    # Format history turns for Nvidia (OpenAI format)
+    messages = [{"role": "system", "content": system_prompt}]
+    if chat_history:
+        for turn in chat_history:
+            role = "assistant" if turn["role"] == "model" else turn["role"]
+            messages.append({"role": role, "content": turn.get("text", turn.get("content", ""))})
+
+    messages.append({"role": "user", "content": user_message})
+
+    payload = {
+        "model": "nvidia/llama-3.1-nemotron-70b-instruct",
+        "messages": messages,
+        "temperature": 0.15,
+        "max_tokens": 1024,
+    }
+
+    import time
+
+    for attempt in range(4):
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            if response.status_code in [429, 503]:
+                print(
+                    f"NVIDIA API returned status {response.status_code}. Retrying in 2.5s (attempt {attempt + 1}/4)..."
+                )
+                time.sleep(2.5)
+                continue
+
+            if response.status_code != 200:
+                print(f"NVIDIA API Error: {response.status_code} - {response.text}")
+                return f"Error: NVIDIA API responded with code {response.status_code}."
+
+            res_json = response.json()
+            choices = res_json.get("choices", [])
+            if choices:
+                return choices[0].get("message", {}).get("content", "")
+            return "Error: Empty response returned from NVIDIA."
+        except Exception as e:
+            print(f"NVIDIA Exception on attempt {attempt + 1}: {e}")
+            if attempt < 3:
+                time.sleep(2.5)
+                continue
+            return f"Error: Failed to request NVIDIA API: {e}"
+
+    return "Error: NVIDIA API is temporarily overloaded (503/429)."
 
 
 def call_gemini(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] = None) -> str:
@@ -35,7 +98,7 @@ def call_gemini(system_prompt: str, user_message: str, chat_history: List[Dict[s
     contents = []
     if chat_history:
         for turn in chat_history:
-            contents.append({"role": turn["role"], "parts": [{"text": turn["text"]}]})
+            contents.append({"role": turn["role"], "parts": [{"text": turn.get("text", turn.get("content", ""))}]})
 
     contents.append({"role": "user", "parts": [{"text": user_message}]})
 
@@ -78,15 +141,23 @@ def call_gemini(system_prompt: str, user_message: str, chat_history: List[Dict[s
     return "Error: Gemini API is temporarily overloaded (503/429)."
 
 
+def call_llm(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] = None) -> str:
+    """Invokes either NVIDIA API or Gemini API depending on which key is configured."""
+    if NVIDIA_API_KEY:
+        return call_nvidia(system_prompt, user_message, chat_history)
+    else:
+        return call_gemini(system_prompt, user_message, chat_history)
+
+
 @router.post("/chat")
 def chat_copilot(payload: Dict[str, Any] = Body(...), db: Session = Depends(get_db)):
     """
-    Main LLM-based Copilot chatbot with live Agentic tool calling capabilities using Gemini.
+    Main LLM-based Copilot chatbot with live Agentic tool calling capabilities using Gemini or NVIDIA LLMs.
     """
     message = payload.get("message", "").strip()
     merchant_id = payload.get("merchant_id", 1)
 
-    system_prompt = f"""You are FinAI Copilot, an advanced AI assistant powered by Gemini.
+    system_prompt = f"""You are FinAI Copilot, an advanced AI assistant.
 You have direct read-only access to the database and can execute overrides after human approval.
 
 The current merchant has merchant_id = 1.
@@ -109,7 +180,7 @@ Database Tables Schema:
    - business_name: VARCHAR
    - user_id: INTEGER
    - kyc_status: VARCHAR ('pending', 'approved', 'rejected')
-   - merchant_settings:
+3. merchant_settings:
    - id: INTEGER (Primary key)
    - merchant_id: INTEGER
    - rate_limit_per_min: INTEGER
@@ -138,7 +209,7 @@ Guidelines:
 
     # Multi-turn tool calling loop (max 4 iterations to prevent loops)
     for iteration in range(4):
-        ai_response = call_gemini(system_prompt, current_user_msg, chat_history)
+        ai_response = call_llm(system_prompt, current_user_msg, chat_history)
         ai_response_clean = ai_response.strip()
 
         # 1. Action Tool: Update Settings (HITL)
