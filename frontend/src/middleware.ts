@@ -24,7 +24,7 @@ export function middleware(request: NextRequest) {
 
   // Protect dashboard routes
   const isProtectedPath = path.startsWith("/merchant") || path.startsWith("/admin") || path.startsWith("/analyst");
-  
+
   if (isProtectedPath) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url));

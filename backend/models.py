@@ -58,3 +58,30 @@ class AuditLog(Base):
     user_email = Column(String, nullable=True)
     status_code = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+
+
+class KYCDocument(Base):
+    __tablename__ = "kyc_documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    merchant_id = Column(Integer, ForeignKey("merchants.id", ondelete="CASCADE"), nullable=False)
+    document_type = Column(String, nullable=False)  # PAN, Aadhaar
+    file_path = Column(String, nullable=False)
+    extracted_text = Column(String, nullable=True)
+    blur_score = Column(Float, nullable=True)
+    status = Column(String, default="pending")  # pending, verified, rejected
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+
+    merchant = relationship("Merchant")
+
+
+class MerchantSettings(Base):
+    __tablename__ = "merchant_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    merchant_id = Column(Integer, ForeignKey("merchants.id", ondelete="CASCADE"), unique=True, nullable=False)
+    rate_limit_per_min = Column(Integer, default=100)
+    mfa_enabled = Column(Boolean, default=False)
+    settlement_buffer = Column(Float, default=0.0)
+
+    merchant = relationship("Merchant")

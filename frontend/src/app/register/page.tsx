@@ -67,7 +67,7 @@ export default function RegisterPage() {
             <span>{success}</span>
           </div>
         )}
-        
+
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <div>
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Email Address</label>
@@ -75,8 +75,8 @@ export default function RegisterPage() {
               <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-500">
                 <Mail size={16} />
               </span>
-              <input 
-                type="email" 
+              <input
+                type="email"
                 required
                 placeholder="name@company.com"
                 className="w-full rounded-xl border border-slate-700 bg-slate-880/50 pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
@@ -85,15 +85,15 @@ export default function RegisterPage() {
               />
             </div>
           </div>
-          
+
           <div>
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Password</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-500">
                 <Lock size={16} />
               </span>
-              <input 
-                type="password" 
+              <input
+                type="password"
                 required
                 placeholder="••••••••"
                 className="w-full rounded-xl border border-slate-700 bg-slate-880/50 pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
@@ -115,8 +115,8 @@ export default function RegisterPage() {
               <option value="admin">System Admin</option>
             </select>
           </div>
-          
-          <button 
+
+          <button
             type="submit"
             disabled={loading}
             className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 py-3.5 font-semibold text-slate-950 shadow-lg shadow-teal-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
@@ -128,7 +128,7 @@ export default function RegisterPage() {
             )}
           </button>
         </form>
-        
+
         <p className="mt-6 text-center text-sm text-slate-400">
           Already have an account?{" "}
           <Link href="/login" className="text-teal-400 hover:text-teal-300 font-medium hover:underline transition-all">

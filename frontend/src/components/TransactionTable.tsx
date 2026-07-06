@@ -115,7 +115,7 @@ export default function TransactionTable() {
               <option value="failed">Failed</option>
             </select>
           </div>
-          <button 
+          <button
             onClick={fetchTransactions}
             className="p-2 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-all"
           >

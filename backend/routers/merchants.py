@@ -72,12 +72,7 @@ def list_merchants(
         query = query.filter(models.Merchant.business_name.ilike(f"%{search}%"))
 
     total = query.count()
-    items = (
-        query.order_by(models.Merchant.created_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-        .all()
-    )
+    items = query.order_by(models.Merchant.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
     return {"total": total, "page": page, "page_size": page_size, "items": items}
 

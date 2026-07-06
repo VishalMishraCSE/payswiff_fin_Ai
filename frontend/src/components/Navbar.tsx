@@ -23,7 +23,7 @@ export default function Navbar() {
         <ThemeToggle />
 
         <span className="text-sm text-slate-500 dark:text-slate-400">user@finai.com</span>
-        <button 
+        <button
           onClick={handleLogout}
           className="rounded-lg bg-teal-500 px-4 py-2 text-sm font-medium text-white dark:text-slate-950 transition-all hover:bg-teal-600 dark:hover:bg-teal-400 cursor-pointer"
         >

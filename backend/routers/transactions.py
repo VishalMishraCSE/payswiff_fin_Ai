@@ -11,6 +11,7 @@ router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 # ── Response Schemas ──────────────────────────────────────────────────────────
 
+
 class TransactionOut(BaseModel):
     id: int
     reference_id: str
@@ -38,6 +39,7 @@ class PaginatedTransactions(BaseModel):
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
+
 @router.get("", response_model=PaginatedTransactions)
 def list_transactions(
     page: int = Query(1, ge=1),
@@ -61,12 +63,7 @@ def list_transactions(
         query = query.filter(models.Transaction.is_fraud == is_fraud)
 
     total = query.count()
-    items = (
-        query.order_by(models.Transaction.created_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-        .all()
-    )
+    items = query.order_by(models.Transaction.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
     return {"total": total, "page": page, "page_size": page_size, "items": items}
 

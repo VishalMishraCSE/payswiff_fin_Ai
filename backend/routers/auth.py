@@ -36,6 +36,14 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    # Automatically create merchant profile if role is merchant
+    if user_in.role == "merchant":
+        business_name = user_in.email.split("@")[0].replace(".", " ").replace("_", " ").title() + " Store"
+        merchant = models.Merchant(business_name=business_name, user_id=new_user.id, kyc_status="pending")
+        db.add(merchant)
+        db.commit()
+
     return {"message": "User registered successfully", "user_id": new_user.id}
 
 

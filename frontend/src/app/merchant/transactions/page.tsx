@@ -16,7 +16,7 @@ async function getTransactions() {
     });
 
     if (!res.ok) return [];
-    
+
     const data = await res.json();
     return data.items || [];
   } catch (error) {
@@ -36,7 +36,7 @@ export default async function TransactionsPage() {
           View and sort your recent transaction history.
         </p>
       </div>
-      
+
       <TransactionTable initialData={transactions} />
     </div>
   );
