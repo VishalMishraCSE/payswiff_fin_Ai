@@ -53,7 +53,7 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
 
     for attempt in range(4):
         try:
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            response = requests.post(url, json=payload, headers=headers, timeout=60)
             if response.status_code in [429, 503]:
                 print(
                     f"NVIDIA API returned status {response.status_code}. Retrying in 2.5s (attempt {attempt + 1}/4)..."
