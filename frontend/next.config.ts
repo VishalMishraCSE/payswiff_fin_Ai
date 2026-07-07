@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Allow any LAN/hotspot IP to access dev resources on mobile
+  allowedDevOrigins: ["*"],
   async rewrites() {
     return [
       {

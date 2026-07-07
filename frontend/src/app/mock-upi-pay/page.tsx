@@ -96,8 +96,8 @@ function MockUpiPayContent() {
   const processPayment = async () => {
     setStep("processing");
     try {
-      const backendHost = window.location.hostname;
-      const res = await fetch(`http://${backendHost}:8000/transactions/mock-pay`, {
+      const apiBase = `${window.location.origin}/api/backend`;
+      const res = await fetch(`${apiBase}/transactions/mock-pay`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
