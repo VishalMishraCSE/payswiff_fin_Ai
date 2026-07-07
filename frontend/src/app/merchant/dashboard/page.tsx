@@ -171,7 +171,7 @@ export default function MerchantDashboard() {
 
         // Trigger premium soundless toast if fraud is detected
         if (data.is_fraud) {
-          setToastMessage(`[AgenticAI Alert] Flagged transaction from ${data.customer_name} (Score: ${data.fraud_score}%)`);
+          setToastMessage(`ShieldAI Alert: Flagged transaction from ${data.customer_name} (Score: ${data.fraud_score}%)`);
           setShowToast(true);
           setTimeout(() => setShowToast(false), 4500);
         }
@@ -239,7 +239,7 @@ export default function MerchantDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
           {/* Revenue Stat */}
-          <div className="relative group overflow-hidden bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/60 rounded-2xl p-6 transition-all hover:-translate-y-1 duration-300 shadow-sm">
+          <div className="relative group overflow-hidden glass-card p-6 transition-all hover:-translate-y-1 duration-300">
             <div className="absolute top-0 right-0 h-24 w-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all"></div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Revenue</span>
@@ -259,7 +259,7 @@ export default function MerchantDashboard() {
           </div>
 
           {/* Transactions Stat */}
-          <div className="relative group overflow-hidden bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/60 rounded-2xl p-6 transition-all hover:-translate-y-1 duration-300 shadow-sm">
+          <div className="relative group overflow-hidden glass-card p-6 transition-all hover:-translate-y-1 duration-300">
             <div className="absolute top-0 right-0 h-24 w-24 bg-violet-500/5 rounded-full blur-2xl group-hover:bg-violet-500/10 transition-all"></div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Orders</span>
@@ -279,7 +279,7 @@ export default function MerchantDashboard() {
           </div>
 
           {/* Success Rate Stat */}
-          <div className="relative group overflow-hidden bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/60 rounded-2xl p-6 transition-all hover:-translate-y-1 duration-300 shadow-sm">
+          <div className="relative group overflow-hidden glass-card p-6 transition-all hover:-translate-y-1 duration-300">
             <div className="absolute top-0 right-0 h-24 w-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all"></div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Success Rate</span>
@@ -299,7 +299,7 @@ export default function MerchantDashboard() {
           </div>
 
           {/* Fraud Alerts Stat */}
-          <div className="relative group overflow-hidden bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/60 rounded-2xl p-6 transition-all hover:-translate-y-1 duration-300 shadow-sm">
+          <div className="relative group overflow-hidden glass-card p-6 transition-all hover:-translate-y-1 duration-300">
             <div className="absolute top-0 right-0 h-24 w-24 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition-all"></div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Anomalies</span>
@@ -324,7 +324,7 @@ export default function MerchantDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Revenue Stream chart */}
-          <div className="lg:col-span-2 bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-6 space-y-4 shadow-sm">
+          <div className="lg:col-span-2 glass-card p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100">Revenue Stream</h3>
@@ -365,7 +365,7 @@ export default function MerchantDashboard() {
           </div>
 
           {/* Status breakdown pie chart */}
-          <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-6 flex flex-col justify-between shadow-sm">
+          <div className="glass-card p-6 flex flex-col justify-between">
             <div>
               <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100">Ledger Distribution</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">Success vs fail rates</p>
@@ -424,12 +424,12 @@ export default function MerchantDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Real-time live threat feed block */}
-          <div className="lg:col-span-2 bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="lg:col-span-2 glass-card p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
                 <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span>`[AgenticAI]` Real-time Security Evaluation Feed</span>
+                  <span>ShieldAI Live Stream • Real-time Threat Analysis</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Incoming payment stream analyzed on the fly by XGBoost and Isolation Forest models.</p>
               </div>
@@ -494,7 +494,7 @@ export default function MerchantDashboard() {
           </div>
 
           {/* UPI Sandbox QR Code */}
-          <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+          <div className="glass-card p-6 flex flex-col justify-between space-y-4">
             <div>
               <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <span>⚡ UPI Sandbox Pay</span>

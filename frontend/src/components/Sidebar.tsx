@@ -53,7 +53,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#090D16] text-slate-600 dark:text-slate-350 transition-colors duration-300 z-30">
+    <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 glass-sidebar text-slate-600 dark:text-slate-300 transition-all duration-300 z-30">
       <nav className="flex flex-col gap-1.5 p-4">
         <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-4 mb-2">
           {role} Workspace

@@ -79,7 +79,7 @@ export default function ForecastPage() {
           {/* Metrics summary widgets */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-            <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/60 rounded-2xl p-5 shadow-sm">
+            <div className="glass-card p-5 shadow-sm">
               <span className="text-xs text-slate-400 uppercase tracking-wider font-bold">Algorithmic Base</span>
               <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1 flex items-center gap-1.5">
                 <ChartIcon size={16} className="text-indigo-500" />
@@ -87,7 +87,7 @@ export default function ForecastPage() {
               </h3>
             </div>
 
-            <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/60 rounded-2xl p-5 shadow-sm">
+            <div className="glass-card p-5 shadow-sm">
               <span className="text-xs text-slate-400 uppercase tracking-wider font-bold">Confidence bounds</span>
               <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1 flex items-center gap-1.5">
                 <Percent size={16} className="text-emerald-500" />
@@ -95,7 +95,7 @@ export default function ForecastPage() {
               </h3>
             </div>
 
-            <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/60 rounded-2xl p-5 shadow-sm">
+            <div className="glass-card p-5 shadow-sm">
               <span className="text-xs text-slate-400 uppercase tracking-wider font-bold">Root Mean Squared Error (RMSE)</span>
               <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1 flex items-center gap-1.5">
                 <ShieldCheck size={16} className="text-indigo-500" />
@@ -106,7 +106,7 @@ export default function ForecastPage() {
           </div>
 
           {/* Forecasting Chart */}
-          <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="glass-card p-6 space-y-4">
             <div>
               <h3 className="font-bold text-base text-slate-900 dark:text-white">Revenue Projection Model</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">Actual sales logs vs Next 7 days prediction line</p>

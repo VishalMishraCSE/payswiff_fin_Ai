@@ -37,7 +37,7 @@ export default function CopilotPage() {
     {
       id: "welcome",
       sender: "ai",
-      text: "Hello! I am your **FinAI Copilot**.\n\nI have access to `[AgenticAI]` tools and `[GenAI]` reasoning. You can ask me to inspect transactions, summarize reports, or modify safety rate limits."
+      text: "Hello! I am your **FinAI Copilot**.\n\nI have access to ShieldAI security tools and GenAI reasoning. You can ask me to inspect transactions, summarize reports, or modify safety rate limits."
     }
   ]);
   const [input, setInput] = useState("");
@@ -110,8 +110,8 @@ export default function CopilotPage() {
           id: `auth_${Date.now()}`,
           sender: "ai",
           text: approved
-            ? `### \`[AgenticAI]\` Action Executed\n${res.data.message}`
-            : `### \`[AgenticAI]\` Action Cancelled\n${res.data.message}`
+            ? `### ShieldAI Action Executed\n${res.data.message}`
+            : `### ShieldAI Action Cancelled\n${res.data.message}`
         }
       ]);
     } catch (err) {
@@ -317,7 +317,7 @@ export default function CopilotPage() {
       <div className="flex-1 flex flex-col md:flex-row gap-6 items-stretch max-w-7xl mx-auto w-full">
 
         {/* Left column: Chatbox */}
-        <div className="flex-1 flex flex-col bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl overflow-hidden shadow-sm h-[580px]">
+        <div className="flex-1 flex flex-col glass-card overflow-hidden h-[580px]">
 
           {/* Messages Container */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -420,7 +420,7 @@ export default function CopilotPage() {
         <div className="w-full md:w-80 space-y-6">
 
           {/* Quick suggestions */}
-          <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-5 shadow-sm space-y-4">
+          <div className="glass-card p-5 space-y-4">
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">Quick Queries</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">Click a chip below to quickly check simulated queries and tool executions.</p>
 
@@ -443,7 +443,7 @@ export default function CopilotPage() {
           </div>
 
           {/* Framework indicators */}
-          <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-5 shadow-sm space-y-4">
+          <div className="glass-card p-5 space-y-4">
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">Agent capabilities</h3>
 
             <div className="space-y-3.5">

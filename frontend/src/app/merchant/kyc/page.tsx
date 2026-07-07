@@ -91,7 +91,7 @@ export default function KYCPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start max-w-7xl mx-auto w-full">
 
         {/* Left Side: Upload Panel */}
-        <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-6 shadow-sm space-y-6">
+        <div className="glass-card p-6 shadow-sm space-y-6">
           <h3 className="font-bold text-base text-slate-900 dark:text-white">Submit Document</h3>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -160,7 +160,7 @@ export default function KYCPage() {
         {/* Right Side: Verification Logs */}
         <div className="space-y-6">
           {result ? (
-            <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-6 shadow-sm space-y-6 animate-fade-in">
+            <div className="glass-card p-6 shadow-sm space-y-6 animate-fade-in">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h3 className="font-bold text-base text-slate-900 dark:text-white">Analysis Results</h3>
                 <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
@@ -194,14 +194,14 @@ export default function KYCPage() {
               <div className="bg-[#eff6ff] dark:bg-indigo-950/10 border border-blue-200 dark:border-indigo-500/20 rounded-xl p-4 flex items-start gap-3">
                 <ShieldCheck className="text-blue-600 dark:text-indigo-400 shrink-0 mt-0.5" size={18} />
                 <div>
-                  <h4 className="font-bold text-xs text-blue-900 dark:text-indigo-300">`[AgenticAI]` Parser Recommendation</h4>
+                  <h4 className="font-bold text-xs text-blue-900 dark:text-indigo-300">ShieldAI Parser Recommendation</h4>
                   <p className="text-[11px] text-blue-800 dark:text-slate-350 leading-relaxed mt-1 font-medium">{result.recommendation}</p>
                 </div>
               </div>
 
             </div>
           ) : (
-            <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-8 shadow-sm flex flex-col items-center justify-center text-center text-slate-400 h-64">
+            <div className="glass-card p-8 flex flex-col items-center justify-center text-center text-slate-400 h-64">
               <FileText size={32} className="text-slate-450 mb-3" />
               <span className="text-sm font-bold text-slate-700 dark:text-slate-300">No Document Analyzed</span>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs">Upload commercial ID documents to activate the EasyOCR security compliance parser.</p>

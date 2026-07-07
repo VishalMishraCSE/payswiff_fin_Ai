@@ -36,7 +36,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 text-slate-900 dark:text-white transition-colors duration-300">
+    <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between glass-navbar px-6 text-slate-900 dark:text-white transition-all duration-300">
       <Link href="/" className="text-xl font-bold tracking-wider text-teal-600 dark:text-teal-400">
         FinAI
       </Link>
