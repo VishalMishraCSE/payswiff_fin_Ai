@@ -37,7 +37,84 @@ class PaginatedTransactions(BaseModel):
     items: List[TransactionOut]
 
 
+class MockPayInput(BaseModel):
+    customer_name: str
+    customer_email: str
+    amount: float
+    payment_method: str  # Card, UPI, NetBanking
+    merchant_id: Optional[int] = 1
+
+
 # ── Endpoints ─────────────────────────────────────────────────────────────────
+
+
+@router.post("/mock-pay", response_model=TransactionOut)
+def create_mock_transaction(payload: MockPayInput, db: Session = Depends(get_db)):
+    """Simulates processing a mock payment transaction, running ML scoring, and saving to SQLite."""
+    import random
+    from ml_models import score_transaction_ml
+
+    # 1. Run local ML Fraud Scoring
+    ml_res = score_transaction_ml(
+        amount=payload.amount, payment_method=payload.payment_method, hour=datetime.now().hour
+    )
+
+    fraud_prob = ml_res["fraud_score"]
+    is_fraud = ml_res["is_fraud"]
+
+    # 2. Determine Transaction Status: Fail 5% randomly, or if fraud probability is extremely high
+    if fraud_prob > 75.0:
+        status = "Failed" if random.random() < 0.8 else "Success"
+    else:
+        status = "Failed" if random.random() < 0.05 else "Success"
+
+    ref_id = f"TXN-MOCK-{random.randint(100000, 999999)}"
+
+    txn = models.Transaction(
+        reference_id=ref_id,
+        merchant_id=payload.merchant_id,
+        customer_name=payload.customer_name,
+        customer_email=payload.customer_email,
+        amount=payload.amount,
+        currency="INR",
+        status=status,
+        payment_method=payload.payment_method,
+        is_fraud=is_fraud,
+        fraud_score=fraud_prob / 100.0,  # Store database value in 0.0 - 1.0 format
+    )
+
+    db.add(txn)
+    db.commit()
+    db.refresh(txn)
+
+    # 3. Broadcast real-time alert via Websocket manager
+    try:
+        from main import manager
+        import json
+        import asyncio
+
+        alert_payload = {
+            "type": "alert" if txn.is_fraud else "transaction",
+            "id": txn.id,
+            "reference_id": txn.reference_id,
+            "customer_name": txn.customer_name,
+            "amount": txn.amount,
+            "payment_method": txn.payment_method,
+            "is_fraud": txn.is_fraud,
+            "fraud_score": txn.fraud_score * 100.0,
+            "status": txn.status,
+            "created_at": txn.created_at.isoformat(),
+        }
+
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            asyncio.run_coroutine_threadsafe(manager.broadcast(json.dumps(alert_payload)), loop)
+        else:
+            asyncio.run(manager.broadcast(json.dumps(alert_payload)))
+    except Exception as e:
+        print(f"Failed to broadcast mock transaction: {e}")
+
+    return txn
 
 
 @router.get("", response_model=PaginatedTransactions)

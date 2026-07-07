@@ -9,15 +9,31 @@ if os.path.exists(".env"):
                 k, v = line.strip().split("=", 1)
                 os.environ[k.strip()] = v.strip().strip('"').strip("'")
 
-key = os.getenv("GEMINI_API_KEY", "")
-url = f"https://generativelanguage.googleapis.com/v1beta/models?key={key}"
+key = os.getenv("NVIDIA_API_KEY", "")
+url = "https://integrate.api.nvidia.com/v1/chat/completions"
+headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json", "Accept": "application/json"}
 
-print("Listing models...")
-res = requests.get(url)
-print(f"Status Code: {res.status_code}")
-if res.status_code == 200:
-    models_data = res.json()
-    for m in models_data.get("models", []):
-        print(f"Model: {m.get('name')} - Supported methods: {m.get('supportedGenerationMethods')}")
-else:
-    print(f"Response: {res.text}")
+models_to_test = [
+    "meta/llama-3.1-8b-instruct",
+    "meta/llama-3.1-70b-instruct",
+    "meta/llama-3.3-70b-instruct",
+    "nvidia/llama-3.1-nemotron-51b-instruct",
+    "nvidia/llama-3.1-nemotron-70b-instruct",
+    "google/gemma-2-2b-it",
+]
+
+for model in models_to_test:
+    print(f"\nTesting model: {model}")
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": "Hello, write one word response."}],
+        "temperature": 0.15,
+        "max_tokens": 10,
+    }
+    res = requests.post(url, json=payload, headers=headers)
+    print(f"Status Code: {res.status_code}")
+    if res.status_code == 200:
+        print(f"Success Response: {res.json().get('choices', [{}])[0].get('message', {}).get('content')}")
+        break
+    else:
+        print(f"Error Response: {res.text}")

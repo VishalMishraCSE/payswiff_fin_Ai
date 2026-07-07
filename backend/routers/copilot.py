@@ -44,7 +44,7 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
     messages.append({"role": "user", "content": user_message})
 
     payload = {
-        "model": "nvidia/llama-3.1-nemotron-70b-instruct",
+        "model": "meta/llama-3.1-8b-instruct",
         "messages": messages,
         "temperature": 0.15,
         "max_tokens": 1024,
