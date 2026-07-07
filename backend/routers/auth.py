@@ -27,19 +27,20 @@ class Token(BaseModel):
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(user_in: UserRegister, db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter(models.User.email == user_in.email).first()
+    email_lower = user_in.email.lower()
+    db_user = db.query(models.User).filter(models.User.email == email_lower).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
     hashed_pwd = get_password_hash(user_in.password)
-    new_user = models.User(email=user_in.email, hashed_password=hashed_pwd, role=user_in.role)
+    new_user = models.User(email=email_lower, hashed_password=hashed_pwd, role=user_in.role)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
     # Automatically create merchant profile if role is merchant
     if user_in.role == "merchant":
-        business_name = user_in.email.split("@")[0].replace(".", " ").replace("_", " ").title() + " Store"
+        business_name = email_lower.split("@")[0].replace(".", " ").replace("_", " ").title() + " Store"
         merchant = models.Merchant(business_name=business_name, user_id=new_user.id, kyc_status="pending")
         db.add(merchant)
         db.commit()
@@ -49,7 +50,8 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 def login(credentials: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == credentials.email).first()
+    email_lower = credentials.email.lower()
+    user = db.query(models.User).filter(models.User.email == email_lower).first()
     if not user or not verify_password(credentials.password, str(user.hashed_password)):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 

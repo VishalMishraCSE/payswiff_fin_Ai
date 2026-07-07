@@ -19,14 +19,14 @@ export default function RegisterPage() {
     setSuccess("");
 
     try {
-      const res = await fetch("http://localhost:8000/auth/register", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, role }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Registration failed");
+      if (!res.ok) throw new Error(data.error || "Registration failed");
 
       setSuccess("Account created successfully! Redirecting to login...");
       setTimeout(() => {
@@ -79,7 +79,7 @@ export default function RegisterPage() {
                 type="email"
                 required
                 placeholder="name@company.com"
-                className="w-full rounded-xl border border-slate-700 bg-slate-880/50 pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+                className="w-full rounded-xl border border-slate-700 bg-slate-800/50 pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -96,7 +96,7 @@ export default function RegisterPage() {
                 type="password"
                 required
                 placeholder="••••••••"
-                className="w-full rounded-xl border border-slate-700 bg-slate-880/50 pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
+                className="w-full rounded-xl border border-slate-700 bg-slate-800/50 pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
