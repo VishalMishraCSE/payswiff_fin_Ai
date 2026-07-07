@@ -147,8 +147,47 @@ async def simulate_live_transactions():
                 db.close()
 
 
+def seed_default_users():
+    from database import SessionLocal
+    import models
+    from auth import get_password_hash
+
+    db = SessionLocal()
+    try:
+        defaults = [
+            {
+                "email": "merchant@payswiff.com",
+                "role": "merchant",
+                "password": "Password123!",
+                "biz": "Payswiff Demo Store",
+            },
+            {"email": "analyst@payswiff.com", "role": "analyst", "password": "Password123!", "biz": None},
+            {"email": "admin@payswiff.com", "role": "admin", "password": "Password123!", "biz": None},
+        ]
+        for item in defaults:
+            user = db.query(models.User).filter(models.User.email == item["email"]).first()
+            if not user:
+                hashed = get_password_hash(item["password"])
+                user = models.User(email=item["email"], hashed_password=hashed, role=item["role"])
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+
+                if item["role"] == "merchant":
+                    merchant = db.query(models.Merchant).filter(models.Merchant.user_id == user.id).first()
+                    if not merchant:
+                        merchant = models.Merchant(business_name=item["biz"], user_id=user.id)
+                        db.add(merchant)
+                        db.commit()
+    except Exception as e:
+        print(f"Failed to seed default accounts: {e}")
+    finally:
+        db.close()
+
+
 @app.on_event("startup")
 async def startup_event():
+    seed_default_users()
     asyncio.create_task(simulate_live_transactions())
 
 

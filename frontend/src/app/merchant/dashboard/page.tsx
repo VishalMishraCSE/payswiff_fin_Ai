@@ -117,9 +117,21 @@ export default function MerchantDashboard() {
     setMounted(true);
     fetchDashboardData();
 
-    if (typeof window !== 'undefined') {
-      setUpiUrl(`${window.location.origin}/mock-upi-pay?merchant_id=1&route=UPI`);
-    }
+    const fetchServerIp = async () => {
+      try {
+        const res = await axios.get("http://localhost:8000/analytics/server-ip");
+        if (res.data && res.data.ip) {
+          setUpiUrl(`http://${res.data.ip}:3000/mock-upi-pay?merchant_id=1&route=UPI`);
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to fetch server LAN IP, falling back:", err);
+      }
+      if (typeof window !== 'undefined') {
+        setUpiUrl(`${window.location.origin}/mock-upi-pay?merchant_id=1&route=UPI`);
+      }
+    };
+    fetchServerIp();
 
     // Establish WebSocket Connection for Real-Time Anomaly Alerts
     const ws = new WebSocket("ws://localhost:8000/ws/alerts");

@@ -152,3 +152,20 @@ def get_forecasting(db: Session = Depends(get_db)):
             "insights": "Our machine learning models forecast a 15.4% expansion in weekly transaction volumes. A weekend consumer surge is anticipated, driven by retail activity. Recommendation: Optimize settlement buffers and raise transaction limits on card payment channels.",
         },
     }
+
+
+@router.get("/server-ip")
+def get_server_ip():
+    """Dynamically determine the LAN IP of the host machine to let network clients connect."""
+    import socket
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(("10.254.254.254", 1))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return {"ip": ip}
