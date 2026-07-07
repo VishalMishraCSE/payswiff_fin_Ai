@@ -57,8 +57,43 @@ export default function MerchantDashboard() {
   const [mounted, setMounted] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [upiUrl, setUpiUrl] = useState('');
 
   const socketRef = useRef<WebSocket | null>(null);
+
+  const playNotificationSound = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+      // Tone 1
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+      gain1.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.start();
+      osc1.stop(audioCtx.currentTime + 0.45);
+
+      // Tone 2 (Delayed A5)
+      setTimeout(() => {
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = "sine";
+        osc2.frequency.setValueAtTime(880.0, audioCtx.currentTime); // A5
+        gain2.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.start();
+        osc2.stop(audioCtx.currentTime + 0.55);
+      }, 120);
+    } catch (e) {
+      console.error("Synthesizer audio failed", e);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -82,6 +117,10 @@ export default function MerchantDashboard() {
     setMounted(true);
     fetchDashboardData();
 
+    if (typeof window !== 'undefined') {
+      setUpiUrl(`${window.location.origin}/mock-upi-pay?merchant_id=1&route=UPI`);
+    }
+
     // Establish WebSocket Connection for Real-Time Anomaly Alerts
     const ws = new WebSocket("ws://localhost:8000/ws/alerts");
     socketRef.current = ws;
@@ -101,6 +140,9 @@ export default function MerchantDashboard() {
           status: data.status,
           created_at: data.created_at
         };
+
+        // Play chime sound
+        playNotificationSound();
 
         // Append to live feed
         setLiveTransactions((prev) => [newTxn, ...prev.slice(0, 4)]);
@@ -247,7 +289,7 @@ export default function MerchantDashboard() {
             <div className="absolute top-0 right-0 h-24 w-24 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition-all"></div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Anomalies</span>
-              <div className="p-2 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-450 rounded-xl">
+              <div className="p-2 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-455 rounded-xl">
                 <ShieldAlert size={16} />
               </div>
             </div>
@@ -364,74 +406,113 @@ export default function MerchantDashboard() {
 
         </div>
 
-        {/* Real-time live threat feed block */}
-        <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+        {/* Real-time feed & scan-to-pay QR Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* Real-time live threat feed block */}
+          <div className="lg:col-span-2 bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>`[AgenticAI]` Real-time Security Evaluation Feed</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Incoming payment stream analyzed on the fly by XGBoost and Isolation Forest models.</p>
+              </div>
+              <span className="px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                <Clock size={10} />
+                <span>Live Listening</span>
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {liveTransactions.map((txn, index) => (
+                <div
+                  key={txn.id}
+                  className={`flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border transition-all duration-300 hover:scale-[1.01] ${
+                    txn.is_fraud
+                      ? "bg-rose-55 dark:bg-rose-950/10 border-rose-200 dark:border-rose-900/30"
+                      : "bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2.5 rounded-lg border font-mono text-xs font-bold ${
+                      txn.is_fraud
+                        ? "bg-rose-100/50 border-rose-200 text-rose-600 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-455"
+                        : "bg-slate-200/50 border-slate-350 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+                    }`}>
+                      {txn.payment_method}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{txn.customer_name}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">#{txn.reference_id}</span>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Processed {new Date(txn.created_at).toLocaleTimeString()}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-6 mt-3 md:mt-0 justify-between md:justify-end">
+                    <div>
+                      <p className="text-xs text-slate-400 text-left md:text-right">Transaction Amount</p>
+                      <span className="font-black text-sm text-slate-900 dark:text-slate-150">₹{txn.amount.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 text-left md:text-right">Fraud Score</p>
+                      <span className={`text-sm font-black flex items-center gap-1 justify-start md:justify-end ${
+                        txn.is_fraud ? "text-rose-600 dark:text-rose-450" : "text-emerald-600 dark:text-emerald-450"
+                      }`}>
+                        {txn.is_fraud && <ShieldAlert size={14} />}
+                        {txn.fraud_score}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {liveTransactions.length === 0 && (
+                <div className="py-10 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-2">
+                  <Clock size={16} className="text-slate-500 animate-spin" />
+                  <span>Waiting for live transactions from the backend gateway stream (triggers every 12 seconds)...</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* UPI Sandbox QR Code */}
+          <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
             <div>
               <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>`[AgenticAI]` Real-time Security Evaluation Feed</span>
+                <span>⚡ UPI Sandbox Pay</span>
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Incoming payment stream analyzed on the fly by XGBoost and Isolation Forest models.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Simulate incoming phone transactions instantly</p>
             </div>
-            <span className="px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <Clock size={10} />
-              <span>Live Listening</span>
-            </span>
+
+            <div className="text-center py-4 space-y-3 bg-slate-50/50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-850 rounded-2xl">
+              {upiUrl ? (
+                <div className="space-y-3">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(upiUrl)}&color=6366f1&bgcolor=ffffff`}
+                    alt="UPI Payment QR Code"
+                    className="h-36 w-36 rounded-xl border border-slate-200 dark:border-slate-800 p-2 bg-white mx-auto shadow-sm"
+                  />
+                  <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 select-all max-w-[220px] mx-auto truncate">
+                    {upiUrl}
+                  </p>
+                </div>
+              ) : (
+                <div className="h-36 w-36 bg-slate-100 dark:bg-slate-900 animate-pulse rounded-xl mx-auto" />
+              )}
+            </div>
+
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed space-y-1.5">
+              <p className="font-semibold text-slate-650 dark:text-slate-350">📲 **Scan to Pay Flow:**</p>
+              <p>1. Connect your smartphone to the **same Wi-Fi network**.</p>
+              <p>2. Scan this QR Code with your camera or QR reader.</p>
+              <p>3. Tap simulated pay on your phone browser. Watch it update the feed in real-time with alert sounds!</p>
+            </div>
           </div>
 
-          <div className="space-y-3">
-            {liveTransactions.map((txn, index) => (
-              <div
-                key={txn.id}
-                className={`flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border transition-all duration-300 hover:scale-[1.01] ${
-                  txn.is_fraud
-                    ? "bg-rose-50/50 dark:bg-rose-950/10 border-rose-200 dark:border-rose-900/30"
-                    : "bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800/50"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2.5 rounded-lg border font-mono text-xs font-bold ${
-                    txn.is_fraud
-                      ? "bg-rose-100/50 border-rose-200 text-rose-600 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-400"
-                      : "bg-slate-200/50 border-slate-350 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-                  }`}>
-                    {txn.payment_method}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{txn.customer_name}</span>
-                      <span className="text-[10px] text-slate-400 font-mono">#{txn.reference_id}</span>
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Processed {new Date(txn.created_at).toLocaleTimeString()}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-6 mt-3 md:mt-0 justify-between md:justify-end">
-                  <div>
-                    <p className="text-xs text-slate-400 text-left md:text-right">Transaction Amount</p>
-                    <span className="font-black text-sm text-slate-900 dark:text-slate-150">₹{txn.amount.toLocaleString()}</span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400 text-left md:text-right">Fraud Score</p>
-                    <span className={`text-sm font-black flex items-center gap-1 justify-start md:justify-end ${
-                      txn.is_fraud ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-450"
-                    }`}>
-                      {txn.is_fraud && <ShieldAlert size={14} />}
-                      {txn.fraud_score}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {liveTransactions.length === 0 && (
-              <div className="py-10 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-2">
-                <Clock size={16} className="text-slate-500 animate-spin" />
-                <span>Waiting for live transactions from the backend gateway stream (triggers every 12 seconds)...</span>
-              </div>
-            )}
-          </div>
         </div>
 
       </div>

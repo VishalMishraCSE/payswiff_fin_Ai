@@ -49,7 +49,7 @@ class MockPayInput(BaseModel):
 
 
 @router.post("/mock-pay", response_model=TransactionOut)
-def create_mock_transaction(payload: MockPayInput, db: Session = Depends(get_db)):
+async def create_mock_transaction(payload: MockPayInput, db: Session = Depends(get_db)):
     """Simulates processing a mock payment transaction, running ML scoring, and saving to SQLite."""
     import random
     from ml_models import score_transaction_ml
@@ -91,7 +91,6 @@ def create_mock_transaction(payload: MockPayInput, db: Session = Depends(get_db)
     try:
         from main import manager
         import json
-        import asyncio
 
         alert_payload = {
             "type": "alert" if txn.is_fraud else "transaction",
@@ -106,11 +105,7 @@ def create_mock_transaction(payload: MockPayInput, db: Session = Depends(get_db)
             "created_at": txn.created_at.isoformat(),
         }
 
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.run_coroutine_threadsafe(manager.broadcast(json.dumps(alert_payload)), loop)
-        else:
-            asyncio.run(manager.broadcast(json.dumps(alert_payload)))
+        await manager.broadcast(json.dumps(alert_payload))
     except Exception as e:
         print(f"Failed to broadcast mock transaction: {e}")
 
