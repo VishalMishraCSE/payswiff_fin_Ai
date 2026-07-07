@@ -3,7 +3,7 @@ export function getApiBaseUrl(): string {
     // Route API requests relatively through the Next.js reverse proxy
     return `${window.location.origin}/api/backend`;
   }
-  return "http://localhost:8000";
+  return "http://127.0.0.1:8000";
 }
 
 export function getWsBaseUrl(): string {
@@ -12,5 +12,5 @@ export function getWsBaseUrl(): string {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     return `${protocol}//${window.location.host}/ws/backend`;
   }
-  return "ws://localhost:8000";
+  return "ws://127.0.0.1:8000";
 }
