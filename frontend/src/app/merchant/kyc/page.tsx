@@ -14,6 +14,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 import axios from "axios";
+import { getApiBaseUrl } from "@/utils/api";
 
 export default function KYCPage() {
   const [docType, setDocType] = useState("PAN");
@@ -58,7 +59,7 @@ export default function KYCPage() {
     formData.append("merchant_id", "1");
 
     try {
-      const res = await axios.post("http://localhost:8000/kyc/upload", formData, {
+      const res = await axios.post(`${getApiBaseUrl()}/kyc/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       setResult(res.data);

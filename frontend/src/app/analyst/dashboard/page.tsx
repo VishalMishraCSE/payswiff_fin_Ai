@@ -15,6 +15,7 @@ import {
   FileText
 } from "lucide-react";
 import axios from "axios";
+import { getApiBaseUrl } from "@/utils/api";
 
 interface KYCDocument {
   id: number;
@@ -36,7 +37,7 @@ export default function AnalystDashboard() {
   const fetchKYCQueue = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:8000/kyc/list");
+      const res = await axios.get(`${getApiBaseUrl()}/kyc/list`);
       setKycQueue(res.data);
     } catch (err) {
       console.error("Failed to load KYC queue:", err);
@@ -56,7 +57,7 @@ export default function AnalystDashboard() {
     formData.append("status", status);
 
     try {
-      await axios.post(`http://localhost:8000/kyc/verify/${docId}`, formData);
+      await axios.post(`${getApiBaseUrl()}/kyc/verify/${docId}`, formData);
       setSelectedDoc(null);
       fetchKYCQueue();
     } catch (err) {

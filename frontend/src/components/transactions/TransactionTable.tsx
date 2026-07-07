@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { getApiBaseUrl, getWsBaseUrl } from "@/utils/api";
 
 export type Transaction = {
   id: number;
@@ -38,7 +39,7 @@ export function TransactionTable({ initialData = [] }: { initialData?: Transacti
 
   // 1. Live WebSocket Sync
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8000/ws/alerts");
+    const ws = new WebSocket(`${getWsBaseUrl()}/ws/alerts`);
     ws.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data);
@@ -89,7 +90,7 @@ export function TransactionTable({ initialData = [] }: { initialData?: Transacti
     setSandboxResult(null);
 
     try {
-      const res = await fetch("http://localhost:8000/transactions/mock-pay", {
+      const res = await fetch(`${getApiBaseUrl()}/transactions/mock-pay`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

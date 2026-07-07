@@ -16,6 +16,7 @@ import {
   Play
 } from "lucide-react";
 import axios from "axios";
+import { getApiBaseUrl } from "@/utils/api";
 
 interface Message {
   id: string;
@@ -65,7 +66,7 @@ export default function CopilotPage() {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:8000/copilot/chat", {
+      const res = await axios.post(`${getApiBaseUrl()}/copilot/chat`, {
         message: textToSend,
         merchant_id: 1
       });
@@ -97,7 +98,7 @@ export default function CopilotPage() {
   const handleAction = async (actionId: string, approved: boolean) => {
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:8000/copilot/approve", {
+      const res = await axios.post(`${getApiBaseUrl()}/copilot/approve`, {
         action_id: actionId,
         approved: approved
       });

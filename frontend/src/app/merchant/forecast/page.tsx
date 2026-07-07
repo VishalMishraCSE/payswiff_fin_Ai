@@ -21,6 +21,7 @@ import {
   ResponsiveContainer
 } from "recharts";
 import axios from "axios";
+import { getApiBaseUrl } from "@/utils/api";
 
 export default function ForecastPage() {
   const [data, setData] = useState<any[]>([]);
@@ -37,7 +38,7 @@ export default function ForecastPage() {
     setMounted(true);
     const fetchForecast = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/analytics/forecast");
+        const res = await axios.get(`${getApiBaseUrl()}/analytics/forecast`);
         setData(res.data.data);
         setMetadata(res.data.model_metadata);
       } catch (err) {

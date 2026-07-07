@@ -29,6 +29,7 @@ import {
   Cell
 } from 'recharts';
 import axios from 'axios';
+import { getApiBaseUrl, getWsBaseUrl } from "@/utils/api";
 
 interface LiveTransaction {
   id: number;
@@ -98,10 +99,11 @@ export default function MerchantDashboard() {
   const fetchDashboardData = async () => {
     try {
       setRefreshing(true);
+      const apiBase = getApiBaseUrl();
       const [metricsRes, trendRes, breakdownRes] = await Promise.all([
-        axios.get("http://localhost:8000/analytics/dashboard"),
-        axios.get("http://localhost:8000/analytics/revenue_trend"),
-        axios.get("http://localhost:8000/analytics/status_breakdown")
+        axios.get(`${apiBase}/analytics/dashboard`),
+        axios.get(`${apiBase}/analytics/revenue_trend`),
+        axios.get(`${apiBase}/analytics/status_breakdown`)
       ]);
       setMetrics(metricsRes.data);
       setTrendData(trendRes.data);
@@ -119,7 +121,7 @@ export default function MerchantDashboard() {
 
     const fetchServerIp = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/analytics/server-ip");
+        const res = await axios.get(`${getApiBaseUrl()}/analytics/server-ip`);
         if (res.data && res.data.ip) {
           setUpiUrl(`http://${res.data.ip}:3000/mock-upi-pay?merchant_id=1&route=UPI`);
           return;
@@ -134,7 +136,7 @@ export default function MerchantDashboard() {
     fetchServerIp();
 
     // Establish WebSocket Connection for Real-Time Anomaly Alerts
-    const ws = new WebSocket("ws://localhost:8000/ws/alerts");
+    const ws = new WebSocket(`${getWsBaseUrl()}/ws/alerts`);
     socketRef.current = ws;
 
     ws.onmessage = (event) => {

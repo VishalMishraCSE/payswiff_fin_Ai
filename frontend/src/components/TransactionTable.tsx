@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { getApiBaseUrl } from "@/utils/api";
 import { ChevronLeft, ChevronRight, Filter, RefreshCw, AlertTriangle, ArrowUpDown, IndianRupee } from "lucide-react";
 
 interface Transaction {
@@ -27,7 +28,7 @@ export default function TransactionTable() {
     if (statusFilter) params.status = statusFilter;
 
     try {
-      const res = await axios.get("http://localhost:8000/transactions", { params });
+      const res = await axios.get(`${getApiBaseUrl()}/transactions`, { params });
       setTransactions(res.data.items);
       setTotal(res.data.total);
     } catch (err) {
