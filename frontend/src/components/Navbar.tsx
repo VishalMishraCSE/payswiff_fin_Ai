@@ -1,9 +1,31 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Navbar() {
+  const [userEmail, setUserEmail] = useState("Loading...");
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.email) {
+            setUserEmail(data.email);
+            return;
+          }
+        }
+        setUserEmail("Guest");
+      } catch (err) {
+        setUserEmail("Guest");
+      }
+    };
+    fetchUser();
+  }, []);
+
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -22,13 +44,15 @@ export default function Navbar() {
         {/* Theme Toggle Button */}
         <ThemeToggle />
 
-        <span className="text-sm text-slate-500 dark:text-slate-400">user@finai.com</span>
-        <button
-          onClick={handleLogout}
-          className="rounded-lg bg-teal-500 px-4 py-2 text-sm font-medium text-white dark:text-slate-950 transition-all hover:bg-teal-600 dark:hover:bg-teal-400 cursor-pointer"
-        >
-          Logout
-        </button>
+        <span className="text-sm font-semibold text-slate-600 dark:text-slate-350">{userEmail}</span>
+        {userEmail !== "Guest" && (
+          <button
+            onClick={handleLogout}
+            className="rounded-lg bg-teal-500 px-4 py-2 text-sm font-medium text-white dark:text-slate-950 transition-all hover:bg-teal-600 dark:hover:bg-teal-400 cursor-pointer"
+          >
+            Logout
+          </button>
+        )}
       </div>
     </header>
   );
