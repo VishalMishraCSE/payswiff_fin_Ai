@@ -15,7 +15,6 @@ router = APIRouter(prefix="/copilot", tags=["copilot"])
 PENDING_ACTIONS = {}
 
 # Retrieve API credentials from environment
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
 
 
@@ -81,72 +80,9 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
     return "Error: NVIDIA API is temporarily overloaded (503/429)."
 
 
-def call_gemini(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] = None) -> str:
-    """Makes a direct POST request to the Google Gemini API using the new AQ key with retries."""
-    if not GEMINI_API_KEY:
-        return (
-            "⚠ **Gemini API Key is missing.**\n\n"
-            "Please ensure `GEMINI_API_KEY` is set in your backend `.env` file to activate the live Copilot."
-        )
-
-    url = (
-        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-    )
-    headers = {"Content-Type": "application/json"}
-
-    # Format history turns for Gemini
-    contents = []
-    if chat_history:
-        for turn in chat_history:
-            contents.append({"role": turn["role"], "parts": [{"text": turn.get("text", turn.get("content", ""))}]})
-
-    contents.append({"role": "user", "parts": [{"text": user_message}]})
-
-    payload = {
-        "contents": contents,
-        "systemInstruction": {"parts": [{"text": system_prompt}]},
-        "generationConfig": {"temperature": 0.15},
-    }
-
-    import time
-
-    for attempt in range(4):
-        try:
-            response = requests.post(url, json=payload, headers=headers, timeout=25)
-            if response.status_code in [429, 503]:
-                print(
-                    f"Gemini API returned status {response.status_code}. Retrying in 2.5s (attempt {attempt + 1}/4)..."
-                )
-                time.sleep(2.5)
-                continue
-
-            if response.status_code != 200:
-                print(f"Gemini API Error details: {response.status_code} - {response.text}")
-                return f"Error: Gemini API responded with code {response.status_code}."
-
-            res_json = response.json()
-            candidates = res_json.get("candidates", [])
-            if candidates:
-                parts = candidates[0].get("content", {}).get("parts", [])
-                if parts:
-                    return parts[0].get("text", "")
-            return "Error: Empty response returned from Gemini."
-        except Exception as e:
-            print(f"Gemini Exception on attempt {attempt + 1}: {e}")
-            if attempt < 3:
-                time.sleep(2.5)
-                continue
-            return f"Error: Failed to request Gemini API: {e}"
-
-    return "Error: Gemini API is temporarily overloaded (503/429)."
-
-
 def call_llm(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] = None) -> str:
-    """Invokes either NVIDIA API or Gemini API depending on which key is configured."""
-    if NVIDIA_API_KEY:
-        return call_nvidia(system_prompt, user_message, chat_history)
-    else:
-        return call_gemini(system_prompt, user_message, chat_history)
+    """Invokes the NVIDIA API for LLM reasoning and agent tool calling."""
+    return call_nvidia(system_prompt, user_message, chat_history)
 
 
 @router.post("/chat")

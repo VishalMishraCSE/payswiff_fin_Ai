@@ -70,7 +70,7 @@ if __name__ == "__main__":
         test_sql_query()
         test_inspect_transaction()
         test_hitl_action()
-        print("\n*** ALL GEMINI AGENT INTEGRATION TESTS PASSED SUCCESSFULLY! ***")
+        print("\n*** ALL COPILOT AGENT INTEGRATION TESTS PASSED SUCCESSFULLY! ***")
     except AssertionError as e:
         print(f"\n[FAIL] Assertion failed: {e}")
         sys.exit(1)
