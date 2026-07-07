@@ -1,14 +1,16 @@
 export function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
-    // Dynamically match the host of the client browser
-    return `http://${window.location.hostname}:8000`;
+    // Route API requests relatively through the Next.js reverse proxy
+    return `${window.location.origin}/api/backend`;
   }
   return "http://localhost:8000";
 }
 
 export function getWsBaseUrl(): string {
   if (typeof window !== "undefined") {
-    return `ws://${window.location.hostname}:8000`;
+    // Route WebSocket upgrades relatively through Next.js proxy
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${window.location.host}/ws/backend`;
   }
   return "ws://localhost:8000";
 }
