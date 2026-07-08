@@ -100,7 +100,7 @@ export default function KYCPage() {
               <select
                 value={docType}
                 onChange={(e) => setDocType(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-850 dark:text-slate-250 cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-900 dark:text-slate-200 cursor-pointer"
               >
                 <option value="PAN">Permanent Account Number (PAN Card)</option>
                 <option value="Aadhaar">Aadhaar Card (UIDAI Identity)</option>
@@ -115,8 +115,8 @@ export default function KYCPage() {
               onDrop={handleDrop}
               className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center gap-3 transition-all relative ${
                 dragActive
-                  ? "border-indigo-500 bg-indigo-550/5"
-                  : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/20 hover:border-slate-350 dark:hover:border-slate-700"
+                  ? "border-indigo-500 bg-indigo-500/5"
+                  : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/20 hover:border-slate-300 dark:hover:border-slate-700"
               }`}
             >
               <UploadCloud size={32} className="text-slate-400" />
@@ -185,7 +185,7 @@ export default function KYCPage() {
               {/* OCR Text Preview */}
               <div className="space-y-2">
                 <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">Raw Extracted OCR Text:</span>
-                <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-4 rounded-xl font-mono text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed max-h-24 overflow-y-auto">
+                <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl font-mono text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed max-h-24 overflow-y-auto">
                   {result.ocr_preview}
                 </div>
               </div>
@@ -195,14 +195,14 @@ export default function KYCPage() {
                 <ShieldCheck className="text-blue-600 dark:text-indigo-400 shrink-0 mt-0.5" size={18} />
                 <div>
                   <h4 className="font-bold text-xs text-blue-900 dark:text-indigo-300">ShieldAI Parser Recommendation</h4>
-                  <p className="text-[11px] text-blue-800 dark:text-slate-350 leading-relaxed mt-1 font-medium">{result.recommendation}</p>
+                  <p className="text-[11px] text-blue-800 dark:text-slate-300 leading-relaxed mt-1 font-medium">{result.recommendation}</p>
                 </div>
               </div>
 
             </div>
           ) : (
             <div className="glass-card p-8 flex flex-col items-center justify-center text-center text-slate-400 h-64">
-              <FileText size={32} className="text-slate-450 mb-3" />
+              <FileText size={32} className="text-slate-400 mb-3" />
               <span className="text-sm font-bold text-slate-700 dark:text-slate-300">No Document Analyzed</span>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs">Upload commercial ID documents to activate the EasyOCR security compliance parser.</p>
             </div>

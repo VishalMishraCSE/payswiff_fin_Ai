@@ -41,8 +41,8 @@ def test_sql_query():
 
 def test_inspect_transaction():
     print("\n3. Testing Transaction Inspection Tool...")
-    # Find a valid transaction ID from DB or inspect #10
-    res = requests.post(f"{BASE_URL}/copilot/chat", json={"message": "Inspect transaction #10", "merchant_id": 1})
+    # Find a valid transaction ID from DB or inspect #105101
+    res = requests.post(f"{BASE_URL}/copilot/chat", json={"message": "Inspect transaction #105101", "merchant_id": 1})
     assert res.status_code == 200, f"Expected 200, got {res.status_code}"
     data = res.json()
     msg = data.get("message", "")

@@ -44,7 +44,7 @@ export default function Navbar() {
         {/* Theme Toggle Button */}
         <ThemeToggle />
 
-        <span className="text-sm font-semibold text-slate-600 dark:text-slate-350">{userEmail}</span>
+        <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{userEmail}</span>
         {userEmail !== "Guest" && (
           <button
             onClick={handleLogout}

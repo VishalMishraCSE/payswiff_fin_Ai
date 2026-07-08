@@ -1,11 +1,14 @@
 @import "tailwindcss";
 
+/* Tailwind CSS v4 custom dark mode variant */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
-  --card-bg: rgba(255, 255, 255, 0.7);
-  --card-border: rgba(226, 232, 240, 0.8);
-  --card-shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.1), 0 8px 10px -6px rgba(148, 163, 184, 0.1);
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --card-border: rgba(226, 232, 240, 1);
+  --card-shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.15), 0 8px 10px -6px rgba(148, 163, 184, 0.1);
   --accent: #4f46e5;
   --pulse-glow: rgba(79, 70, 229, 0.15);
   --color-background: var(--background);
@@ -13,10 +16,10 @@
 }
 
 .dark {
-  --background: #060913;
+  --background: #07090e;
   --foreground: #f8fafc;
-  --card-bg: rgba(12, 16, 29, 0.65);
-  --card-border: rgba(30, 41, 59, 0.8);
+  --card-bg: rgba(12, 16, 29, 0.75);
+  --card-border: rgba(30, 41, 59, 0.85);
   --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
   --accent: #6366f1;
   --pulse-glow: rgba(99, 102, 241, 0.2);

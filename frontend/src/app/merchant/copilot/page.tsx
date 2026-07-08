@@ -162,7 +162,7 @@ export default function CopilotPage() {
     });
 
     if (isListItem) {
-      return <li key={index} className="ml-4 list-disc text-sm text-slate-700 dark:text-slate-350 leading-relaxed">{renderedLine}</li>;
+      return <li key={index} className="ml-4 list-disc text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{renderedLine}</li>;
     }
 
     if (!content.trim()) return null;
@@ -195,7 +195,7 @@ export default function CopilotPage() {
 
       elements.push(
         <div key={`table-${key}`} className="my-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950">
-          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-850 text-xs text-left">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-xs text-left">
             <thead className="bg-slate-50 dark:bg-slate-900/50">
               <tr>
                 {headers.map((h, i) => (
@@ -205,7 +205,7 @@ export default function CopilotPage() {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-850 bg-white dark:bg-slate-950/20">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-950/20">
               {dataRows.map((row, rowIdx) => (
                 <tr key={rowIdx} className="hover:bg-slate-50/50 dark:hover:bg-[#0c111e] transition-colors">
                   {row.map((cell, cellIdx) => {
@@ -256,7 +256,7 @@ export default function CopilotPage() {
                     }
 
                     return (
-                      <td key={cellIdx} className="px-4 py-3 text-slate-600 dark:text-slate-350">
+                      <td key={cellIdx} className="px-4 py-3 text-slate-600 dark:text-slate-300">
                         {cell}
                       </td>
                     );
@@ -340,14 +340,14 @@ export default function CopilotPage() {
                   <div className={`p-4 rounded-2xl text-left border ${
                     msg.sender === "user"
                       ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/10"
-                      : "bg-slate-55 dark:bg-slate-900/30 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-800/50"
+                      : "bg-slate-50 dark:bg-slate-900/30 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-800/50"
                   }`}>
                     {renderMessageBody(msg.text)}
                   </div>
 
                   {/* Human-in-the-loop Action Card */}
                   {msg.actionPending && msg.actionCard && (
-                    <div className="bg-slate-55 dark:bg-slate-900/80 border border-amber-300 dark:border-amber-500/30 rounded-2xl p-5 space-y-4 animate-pulse">
+                    <div className="bg-slate-50 dark:bg-slate-900/80 border border-amber-300 dark:border-amber-500/30 rounded-2xl p-5 space-y-4 animate-pulse">
                       <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
                         <Sliders size={14} />
                         <span>Action Pending Authorization</span>
@@ -365,7 +365,7 @@ export default function CopilotPage() {
                         </button>
                         <button
                           onClick={() => handleAction(msg.actionCard!.action_id, false)}
-                          className="px-4 py-2 bg-slate-200 hover:bg-slate-350 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 font-semibold text-xs rounded-xl transition-all active:scale-95 cursor-pointer"
+                          className="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs rounded-xl transition-all active:scale-95 cursor-pointer"
                         >
                           {msg.actionCard.cancel_label}
                         </button>
@@ -378,10 +378,10 @@ export default function CopilotPage() {
 
             {loading && (
               <div className="flex gap-4 items-start">
-                <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-250 dark:border-slate-800 text-slate-600 dark:text-slate-400 animate-spin">
+                <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-600 dark:text-slate-400 animate-spin">
                   <Bot size={16} />
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-850 px-4 py-3 rounded-2xl flex items-center gap-2">
+                <div className="bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 px-4 py-3 rounded-2xl flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-bounce delay-0" />
                   <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-bounce delay-150" />
                   <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-bounce delay-300" />

@@ -187,7 +187,7 @@ export function TransactionTable({ initialData = [] }: { initialData?: Transacti
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 required
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-900 dark:text-white"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-900 dark:text-white"
               />
             </div>
             <div>
@@ -199,7 +199,7 @@ export function TransactionTable({ initialData = [] }: { initialData?: Transacti
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
                 required
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-900 dark:text-white"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-900 dark:text-white"
               />
             </div>
             <div>
@@ -212,7 +212,7 @@ export function TransactionTable({ initialData = [] }: { initialData?: Transacti
                 onChange={(e) => setAmount(e.target.value)}
                 required
                 min="1"
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-900 dark:text-white"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-900 dark:text-white"
               />
             </div>
             <div>
@@ -222,7 +222,7 @@ export function TransactionTable({ initialData = [] }: { initialData?: Transacti
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-900 dark:text-white"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-900 dark:text-white"
               >
                 <option value="Card">Card Payment</option>
                 <option value="UPI">UPI Payment</option>
@@ -233,8 +233,8 @@ export function TransactionTable({ initialData = [] }: { initialData?: Transacti
               {sandboxResult && (
                 <div className={`text-xs font-semibold px-3.5 py-1.5 rounded-lg mr-auto ${
                   sandboxResult.success
-                    ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-500/20"
-                    : "bg-rose-100 dark:bg-rose-500/10 text-rose-800 dark:text-rose-450 border border-rose-250 dark:border-rose-500/20"
+                    ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20"
+                    : "bg-rose-100 dark:bg-rose-500/10 text-rose-800 dark:text-rose-400 border border-rose-300 dark:border-rose-500/20"
                 }`}>
                   {sandboxResult.message}
                 </div>

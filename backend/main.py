@@ -5,8 +5,22 @@ from auth import RoleChecker, get_current_user
 from middleware.audit import AuditLoggingMiddleware
 import asyncio
 import json
+import models
+import database
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="FinAI Core API", version="1.0.0")
+# Ensure all database tables exist on startup
+models.Base.metadata.create_all(bind=database.engine)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    seed_default_users()
+    asyncio.create_task(simulate_live_transactions())
+    yield
+
+
+app = FastAPI(title="FinAI Core API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -167,7 +181,8 @@ def seed_default_users():
         for item in defaults:
             user = db.query(models.User).filter(models.User.email == item["email"]).first()
             if not user:
-                hashed = get_password_hash(item["password"])
+                pwd = str(item["password"]) if item["password"] is not None else "Password123!"
+                hashed = get_password_hash(pwd)
                 user = models.User(email=item["email"], hashed_password=hashed, role=item["role"])
                 db.add(user)
                 db.commit()
@@ -183,12 +198,6 @@ def seed_default_users():
         print(f"Failed to seed default accounts: {e}")
     finally:
         db.close()
-
-
-@app.on_event("startup")
-async def startup_event():
-    seed_default_users()
-    asyncio.create_task(simulate_live_transactions())
 
 
 @app.get("/")

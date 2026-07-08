@@ -303,7 +303,7 @@ export default function MerchantDashboard() {
             <div className="absolute top-0 right-0 h-24 w-24 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition-all"></div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Anomalies</span>
-              <div className="p-2 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-455 rounded-xl">
+              <div className="p-2 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl">
                 <ShieldAlert size={16} />
               </div>
             </div>
@@ -399,7 +399,7 @@ export default function MerchantDashboard() {
                   </div>
                 </>
               ) : (
-                <div className="h-28 w-28 rounded-full border-4 border-slate-200 dark:border-slate-850 border-t-indigo-500 animate-spin" />
+                <div className="h-28 w-28 rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-indigo-500 animate-spin" />
               )}
             </div>
 
@@ -408,7 +408,7 @@ export default function MerchantDashboard() {
                 <div key={index} className="flex items-center justify-between text-xs p-2 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800/40">
                   <div className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }}></span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-350">{item.name}</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">{item.name}</span>
                   </div>
                   <span className="font-bold text-slate-900 dark:text-slate-100">
                     {item.value.toLocaleString()} ({item.percentage}%)
@@ -445,15 +445,15 @@ export default function MerchantDashboard() {
                   key={txn.id}
                   className={`flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border transition-all duration-300 hover:scale-[1.01] ${
                     txn.is_fraud
-                      ? "bg-rose-55 dark:bg-rose-950/10 border-rose-200 dark:border-rose-900/30"
-                      : "bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800/50"
+                      ? "bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/40"
+                      : "bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800/60"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-2.5 rounded-lg border font-mono text-xs font-bold ${
                       txn.is_fraud
-                        ? "bg-rose-100/50 border-rose-200 text-rose-600 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-455"
-                        : "bg-slate-200/50 border-slate-350 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+                        ? "bg-rose-100/50 border-rose-200 text-rose-600 dark:bg-rose-500/20 dark:border-rose-500/30 dark:text-rose-400"
+                        : "bg-slate-200/50 border-slate-300 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
                     }`}>
                       {txn.payment_method}
                     </div>
@@ -469,12 +469,14 @@ export default function MerchantDashboard() {
                   <div className="flex items-center gap-6 mt-3 md:mt-0 justify-between md:justify-end">
                     <div>
                       <p className="text-xs text-slate-400 text-left md:text-right">Transaction Amount</p>
-                      <span className="font-black text-sm text-slate-900 dark:text-slate-150">₹{txn.amount.toLocaleString()}</span>
+                      <span className="inline-block font-black text-sm px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/80 text-indigo-900 dark:text-indigo-200 shadow-sm">
+                        ₹{txn.amount.toLocaleString()}
+                      </span>
                     </div>
                     <div>
                       <p className="text-xs text-slate-400 text-left md:text-right">Fraud Score</p>
                       <span className={`text-sm font-black flex items-center gap-1 justify-start md:justify-end ${
-                        txn.is_fraud ? "text-rose-600 dark:text-rose-450" : "text-emerald-600 dark:text-emerald-450"
+                        txn.is_fraud ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"
                       }`}>
                         {txn.is_fraud && <ShieldAlert size={14} />}
                         {txn.fraud_score}%
@@ -502,7 +504,7 @@ export default function MerchantDashboard() {
               <p className="text-xs text-slate-500 dark:text-slate-400">Simulate incoming phone transactions instantly</p>
             </div>
 
-            <div className="text-center py-4 space-y-3 bg-slate-50/50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-850 rounded-2xl">
+            <div className="text-center py-4 space-y-3 bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-2xl">
               {upiUrl ? (
                 <div className="space-y-3">
                   <img
@@ -520,7 +522,7 @@ export default function MerchantDashboard() {
             </div>
 
             <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed space-y-1.5">
-              <p className="font-semibold text-slate-650 dark:text-slate-350">📲 **Scan to Pay Flow:**</p>
+              <p className="font-semibold text-slate-700 dark:text-slate-300">📲 **Scan to Pay Flow:**</p>
               <p>1. Connect your smartphone to the **same Wi-Fi network**.</p>
               <p>2. Scan this QR Code with your camera or QR reader.</p>
               <p>3. Tap simulated pay on your phone browser. Watch it update the feed in real-time with alert sounds!</p>

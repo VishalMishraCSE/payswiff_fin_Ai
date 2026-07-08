@@ -146,8 +146,8 @@ function MockUpiPayContent() {
   };
 
   return (
-    <div className="min-h-dvh bg-[#07090e] text-slate-100 flex flex-col items-center justify-center p-3 font-sans select-none">
-      <div className="w-full max-w-[400px] bg-[#0d111d]/90 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col min-h-[85dvh] max-h-[95dvh] justify-between backdrop-blur-xl">
+    <div className="min-h-dvh w-full bg-[#07090e] text-slate-100 flex flex-col items-center justify-center font-sans select-none sm:p-4">
+      <div className="w-full min-h-dvh sm:min-h-[85dvh] sm:max-h-[95dvh] sm:max-w-[420px] bg-[#0d111d] border-0 sm:border sm:border-slate-800 rounded-none sm:rounded-3xl overflow-hidden shadow-none sm:shadow-2xl relative flex flex-col justify-between backdrop-blur-xl">
 
         {/* Step 1: Payment Details */}
         {step === "details" && (

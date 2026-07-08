@@ -154,7 +154,7 @@ export default function TransactionTable() {
             ))}
             {transactions.length === 0 && !loading && (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-xs text-slate-450">
+                <td colSpan={6} className="py-12 text-center text-xs text-slate-400">
                   No transaction records found matching your filters.
                 </td>
               </tr>

@@ -56,7 +56,7 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 glass-sidebar text-slate-600 dark:text-slate-300 transition-all duration-300 z-30">
       <nav className="flex flex-col gap-1.5 p-4">
         <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-4 mb-2">
-          {role} Workspace
+          {role.charAt(0).toUpperCase() + role.slice(1)} Workspace
         </div>
         {menuItems.map((item) => {
           const Icon = item.icon;

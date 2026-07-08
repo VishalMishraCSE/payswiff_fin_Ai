@@ -77,7 +77,7 @@ export default function AnalystDashboard() {
       {/* Header */}
       <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-rose-600 dark:text-rose-450 font-bold text-xs uppercase tracking-widest mb-1">
+          <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-bold text-xs uppercase tracking-widest mb-1">
             <ShieldAlert size={12} />
             <span>Compliance & Operations</span>
           </div>
@@ -90,7 +90,7 @@ export default function AnalystDashboard() {
         </div>
         <button
           onClick={fetchKYCQueue}
-          className="flex items-center gap-2 bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-250 cursor-pointer"
+          className="flex items-center gap-2 bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-900 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer"
         >
           <RefreshCw size={12} className={`${loading ? 'animate-spin' : ''}`} />
           <span>Refresh Queue</span>
@@ -101,7 +101,7 @@ export default function AnalystDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
 
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c101a] p-5 shadow-sm">
-          <p className="text-xs font-bold text-slate-450 uppercase tracking-wider">Pending Reviews</p>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending Reviews</p>
           <div className="flex items-center justify-between mt-2">
             <span className="text-3xl font-black text-amber-500">{pendingCount}</span>
             <Clock className="text-amber-500" size={24} />
@@ -109,7 +109,7 @@ export default function AnalystDashboard() {
         </div>
 
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c101a] p-5 shadow-sm">
-          <p className="text-xs font-bold text-slate-450 uppercase tracking-wider">Approved Credentials</p>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Approved Credentials</p>
           <div className="flex items-center justify-between mt-2">
             <span className="text-3xl font-black text-emerald-500">{verifiedCount}</span>
             <CheckCircle2 className="text-emerald-500" size={24} />
@@ -117,7 +117,7 @@ export default function AnalystDashboard() {
         </div>
 
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c101a] p-5 shadow-sm">
-          <p className="text-xs font-bold text-slate-450 uppercase tracking-wider">Rejected Requests</p>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Rejected Requests</p>
           <div className="flex items-center justify-between mt-2">
             <span className="text-3xl font-black text-rose-500">{rejectedCount}</span>
             <XCircle className="text-rose-500" size={24} />
@@ -139,7 +139,7 @@ export default function AnalystDashboard() {
               <span>Fetching compliance items...</span>
             </div>
           ) : kycQueue.length === 0 ? (
-            <div className="py-20 text-center text-xs text-slate-450 flex flex-col items-center justify-center gap-2">
+            <div className="py-20 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-2">
               <FileCheck size={28} className="text-slate-500" />
               <span>No document submissions pending review</span>
             </div>
@@ -147,7 +147,7 @@ export default function AnalystDashboard() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-800/60 text-[10px] text-slate-450 font-bold uppercase tracking-wider">
+                  <tr className="border-b border-slate-200 dark:border-slate-800/60 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                     <th className="pb-3 pl-2">Merchant Name</th>
                     <th className="pb-3">Type</th>
                     <th className="pb-3">OpenCV Quality</th>
@@ -209,12 +209,12 @@ export default function AnalystDashboard() {
 
               <div className="space-y-1">
                 <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Document Type</label>
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-350">{selectedDoc.document_type} Identification</p>
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">{selectedDoc.document_type} Identification</p>
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Raw OCR Parse Output</label>
-                <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-4 rounded-xl font-mono text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed max-h-32 overflow-y-auto">
+                <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl font-mono text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed max-h-32 overflow-y-auto">
                   {selectedDoc.extracted_text}
                 </div>
               </div>
@@ -242,7 +242,7 @@ export default function AnalystDashboard() {
               )}
             </div>
           ) : (
-            <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-8 shadow-sm flex flex-col items-center justify-center text-center text-slate-450 h-72">
+            <div className="bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800/65 rounded-2xl p-8 shadow-sm flex flex-col items-center justify-center text-center text-slate-400 h-72">
               <Eye size={28} className="mb-3 text-slate-500" />
               <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Inspector Panel</span>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 max-w-xs">Select a merchant record from the queue to view raw text extractions and override kyc state values.</p>
