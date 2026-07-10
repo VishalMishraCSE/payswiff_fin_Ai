@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { TransactionTable } from "@/components/transactions/TransactionTable";
+import { getApiBaseUrl } from "@/utils/api";
 
 async function getTransactions() {
   const cookieStore = await cookies();
@@ -8,7 +9,7 @@ async function getTransactions() {
   if (!token) return [];
 
   try {
-    const res = await fetch("http://localhost:8000/transactions", {
+    const res = await fetch(`${getApiBaseUrl()}/transactions`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

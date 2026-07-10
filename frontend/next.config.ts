@@ -9,14 +9,15 @@ const nextConfig: NextConfig = {
     "192.168.148.204",
   ],
   async rewrites() {
+    const backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8000";
     return [
       {
         source: "/api/backend/:path*",
-        destination: "http://127.0.0.1:8000/:path*",
+        destination: `${backendUrl}/:path*`,
       },
       {
         source: "/ws/backend/:path*",
-        destination: "http://127.0.0.1:8000/:path*",
+        destination: `${backendUrl}/:path*`,
       },
     ];
   },

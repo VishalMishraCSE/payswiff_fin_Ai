@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import { getApiBaseUrl } from "@/utils/api";
 
 export async function POST(request: Request) {
   try {
     const { email, password, role } = await request.json();
 
     // Call FastAPI backend register endpoint
-    const response = await fetch("http://localhost:8000/auth/register", {
+    const response = await fetch(`${getApiBaseUrl()}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, role }),

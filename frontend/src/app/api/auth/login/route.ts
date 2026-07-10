@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getApiBaseUrl } from "@/utils/api";
 
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
 
     // Call FastAPI backend login endpoint
-    const response = await fetch("http://localhost:8000/auth/login", {
+    const response = await fetch(`${getApiBaseUrl()}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

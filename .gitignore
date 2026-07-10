@@ -21,3 +21,9 @@ __pycache__/
 *.pyo
 venv/
 .venv/
+
+# Database
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
