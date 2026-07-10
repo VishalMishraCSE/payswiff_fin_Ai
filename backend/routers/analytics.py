@@ -41,10 +41,14 @@ def get_dashboard_metrics(db: Session = Depends(get_db)):
 def get_revenue_trend(db: Session = Depends(get_db)):
     """Retrieve daily revenue trends for line charting."""
     # We group transactions by date and sum the amounts
-    # In SQLite, we can use strftime
+    if db.bind.name == "sqlite":
+        date_func = func.strftime("%Y-%m-%d", models.Transaction.created_at)
+    else:
+        date_func = func.to_char(models.Transaction.created_at, "YYYY-MM-DD")
+
     results = (
         db.query(
-            func.strftime("%Y-%m-%d", models.Transaction.created_at).label("day"),
+            date_func.label("day"),
             func.sum(models.Transaction.amount).label("revenue"),
             func.count(models.Transaction.id).label("transactions"),
         )
