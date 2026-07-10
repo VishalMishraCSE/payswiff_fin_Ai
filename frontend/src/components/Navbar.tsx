@@ -3,8 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Menu } from "lucide-react";
 
-export default function Navbar() {
+interface NavbarProps {
+  onMenuToggle?: () => void;
+}
+
+export default function Navbar({ onMenuToggle }: NavbarProps) {
   const [userEmail, setUserEmail] = useState("Loading...");
 
   useEffect(() => {
@@ -37,9 +42,19 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between glass-navbar px-6 text-slate-900 dark:text-white transition-all duration-300">
-      <Link href="/" className="text-xl font-bold tracking-wider text-teal-600 dark:text-teal-400">
-        FinAI
-      </Link>
+      <div className="flex items-center gap-3">
+        {onMenuToggle && (
+          <button
+            onClick={onMenuToggle}
+            className="lg:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <Menu size={20} />
+          </button>
+        )}
+        <Link href="/" className="text-xl font-bold tracking-wider text-teal-600 dark:text-teal-400">
+          FinAI
+        </Link>
+      </div>
       <div className="flex items-center gap-4">
         {/* Theme Toggle Button */}
         <ThemeToggle />

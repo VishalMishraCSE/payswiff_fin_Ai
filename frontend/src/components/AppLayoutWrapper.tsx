@@ -1,18 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 
 export default function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // Pages that should be 100% full-screen without desktop Sidebar/Navbar
   const isFullScreenPage =
     pathname?.startsWith("/mock-upi-pay") ||
     pathname === "/login" ||
-    pathname === "/register";
+    pathname === "/register" ||
+    pathname === "/";
 
   if (isFullScreenPage) {
     return (
@@ -24,10 +26,10 @@ export default function AppLayoutWrapper({ children }: { children: React.ReactNo
 
   return (
     <>
-      <Navbar />
+      <Navbar onMenuToggle={() => setIsMobileOpen(!isMobileOpen)} />
       <div className="flex">
-        <Sidebar />
-        <main className="ml-64 w-[calc(100vw-16rem)] p-8">
+        <Sidebar isOpen={isMobileOpen} onClose={() => setIsMobileOpen(false)} />
+        <main className="ml-0 lg:ml-64 w-full lg:w-[calc(100vw-16rem)] p-4 lg:p-8">
           {children}
         </main>
       </div>
