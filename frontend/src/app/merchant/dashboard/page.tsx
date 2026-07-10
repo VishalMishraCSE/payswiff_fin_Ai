@@ -120,6 +120,13 @@ export default function MerchantDashboard() {
     fetchDashboardData();
 
     const fetchServerIp = async () => {
+      const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      if (!isLocal) {
+        if (typeof window !== 'undefined') {
+          setUpiUrl(`${window.location.origin}/mock-upi-pay?merchant_id=1&route=UPI`);
+        }
+        return;
+      }
       try {
         const res = await axios.get(`${getApiBaseUrl()}/analytics/server-ip`);
         if (res.data && res.data.ip) {
@@ -521,11 +528,8 @@ export default function MerchantDashboard() {
               )}
             </div>
 
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed space-y-1.5">
-              <p className="font-semibold text-slate-700 dark:text-slate-300">📲 **Scan to Pay Flow:**</p>
-              <p>1. Connect your smartphone to the **same Wi-Fi network**.</p>
-              <p>2. Scan this QR Code with your camera or QR reader.</p>
-              <p>3. Tap simulated pay on your phone browser. Watch it update the feed in real-time with alert sounds!</p>
+            <div className="text-center text-xs text-slate-500 dark:text-slate-400 font-semibold py-1">
+              📲 Scan to simulate a transaction from any network
             </div>
           </div>
 
