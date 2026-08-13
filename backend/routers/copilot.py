@@ -101,7 +101,7 @@ def get_nvidia_api_key() -> str:
     return key
 
 
-def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] = None) -> str:
+def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] | None = None) -> str:
     """Makes a direct POST request to NVIDIA API Catalog (OpenAI-compatible) with retries across standard model endpoints."""
     api_key = get_nvidia_api_key()
     if not api_key:
@@ -165,7 +165,7 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
     return ""
 
 
-def call_llm(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] = None, merchant_id: int = 1) -> str:
+def call_llm(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] | None = None, merchant_id: int = 1) -> str:
     """Invokes the NVIDIA API for LLM reasoning, or falls back to smart intent parsing if key is missing or request fails."""
     api_key = get_nvidia_api_key()
     if api_key:
@@ -240,7 +240,7 @@ def _chat_copilot_internal(payload: Dict[str, Any], db: Session):
     # Multi-turn tool calling loop (max 4 iterations to prevent loops)
     for iteration in range(4):
         ai_response = call_llm(system_prompt, current_user_msg, chat_history, merchant_id) or ""
-        ai_response_clean = str(ai_response).strip()
+        ai_response_clean = ai_response.strip()
 
         # 1. Action Tool: Update Settings (HITL)
         rate_limit_match = re.search(r"\[ACTION:\s*UPDATE_RATE_LIMIT[^\]]*?(\d+)\]", ai_response_clean, re.IGNORECASE)
@@ -401,7 +401,7 @@ def _chat_copilot_internal(payload: Dict[str, Any], db: Session):
     if last_observation:
         return {"sender": "ai", "message": f"Here are the findings from your query:\n\n{last_observation}"}
     clean_fallback = re.sub(
-        r"\[(SQL|INSPECT|ACTION):.*?\]", "", str(ai_response), flags=re.IGNORECASE | re.DOTALL
+        r"\[(SQL|INSPECT|ACTION):.*?\]", "", ai_response, flags=re.IGNORECASE | re.DOTALL
     ).strip()
     return {
         "sender": "ai",
