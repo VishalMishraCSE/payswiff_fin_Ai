@@ -14,9 +14,6 @@ router = APIRouter(prefix="/copilot", tags=["copilot"])
 # Simple in-memory storage for pending human-in-the-loop approvals
 PENDING_ACTIONS = {}
 
-# Retrieve API credentials from environment
-NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
-
 
 def parse_intent_fallback(user_message: str, merchant_id: int = 1) -> str:
     """
@@ -276,7 +273,7 @@ def _chat_copilot_internal(payload: Dict[str, Any], db: Session):
                 print(f"Error preparing rate limit action: {e}")
 
         # 2. Database Query Tool (SQL) — only run if we haven't already fetched data in this turn
-        sql_match = re.search(r"\[SQL:\s*(SELECT.*?)(?=\])\]", ai_response_clean, re.IGNORECASE | re.DOTALL)
+        sql_match = re.search(r"\[SQL:\s*(SELECT[\s\S]+?)\]", ai_response_clean, re.IGNORECASE)
         if sql_match and not last_observation:
             sql_query = sql_match.group(1).strip()
             is_safe = sql_query.upper().startswith("SELECT") and not re.search(
