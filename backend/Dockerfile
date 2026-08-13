@@ -1,5 +1,5 @@
 # Production Dockerfile for FastAPI Backend
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Prevent Python from writing pyc files to disc & buffering stdout/stderr
 ENV PYTHONUNBUFFERED=1 \
@@ -20,13 +20,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy dependencies
 COPY requirements.txt .
 
-# Install Python packages
+# Install Python packages (using CPU torch for lightweight deployment)
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend source code
 COPY . .
 
-# Expose port (Cloud Run sets PORT env var dynamically, default 8000)
+# Expose port
 ENV PORT=8000
 EXPOSE 8000
 
