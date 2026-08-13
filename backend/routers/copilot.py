@@ -18,13 +18,69 @@ PENDING_ACTIONS = {}
 NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
 
 
+def parse_intent_fallback(user_message: str, merchant_id: int = 1) -> str:
+    """
+    Fallback intent parser when NVIDIA_API_KEY is not configured or API call fails.
+    Parses natural language queries directly into agent tool tags.
+    """
+    msg_lower = user_message.lower().strip()
+
+    # 1. Rate Limit Action
+    rate_match = re.search(r'(?:set|change|update)\s+(?:rate\s+limit|limit)\s+(?:to\s+)?(\d+)', msg_lower)
+    if rate_match:
+        val = rate_match.group(1)
+        return f"[ACTION: UPDATE_RATE_LIMIT, value: {val}]"
+
+    # 2. Inspect Transaction (#105, txn 105, inspect transaction 105)
+    inspect_match = re.search(r'(?:inspect|check|audit)\s+(?:transaction\s+)?(?:#|txn-)?(\w+)', msg_lower)
+    if inspect_match:
+        ref = inspect_match.group(1)
+        return f"[INSPECT: {ref}]"
+    
+    digits_inspect = re.search(r'#(\d+)', msg_lower)
+    if digits_inspect:
+        return f"[INSPECT: {digits_inspect.group(1)}]"
+
+    # 3. Customer payment lookup: "show payment of minnu yadav", "transactions for priya"
+    customer_match = re.search(r'(?:payment|payments|transaction|transactions|order|orders)\s+(?:of|for|by)\s+([a-zA-Z\s]+)', msg_lower)
+    if customer_match:
+        name = customer_match.group(1).strip()
+        name = re.sub(r'^(the)\s+', '', name).strip()
+        if name:
+            return f"[SQL: SELECT id, reference_id, customer_name, amount, payment_method, status, is_fraud, created_at FROM transactions WHERE LOWER(customer_name) LIKE '%{name}%' AND merchant_id = {merchant_id}]"
+
+    # 4. Failed transactions
+    if "failed" in msg_lower:
+        if "upi" in msg_lower:
+            return f"[SQL: SELECT id, reference_id, customer_name, amount, payment_method, status, created_at FROM transactions WHERE status = 'Failed' AND UPPER(payment_method) = 'UPI' AND merchant_id = {merchant_id}]"
+        elif "card" in msg_lower:
+            return f"[SQL: SELECT id, reference_id, customer_name, amount, payment_method, status, created_at FROM transactions WHERE status = 'Failed' AND UPPER(payment_method) = 'CARD' AND merchant_id = {merchant_id}]"
+        else:
+            return f"[SQL: SELECT id, reference_id, customer_name, amount, payment_method, status, is_fraud FROM transactions WHERE status = 'Failed' AND merchant_id = {merchant_id}]"
+
+    # 5. Fraud / Risk
+    if "fraud" in msg_lower or "risk" in msg_lower or "anomaly" in msg_lower:
+        return f"[SQL: SELECT id, reference_id, customer_name, amount, payment_method, status, fraud_score FROM transactions WHERE is_fraud = 1 AND merchant_id = {merchant_id}]"
+
+    # 6. Performance / Summary
+    if "summary" in msg_lower or "performance" in msg_lower or "report" in msg_lower or "overview" in msg_lower:
+        return f"[SQL: SELECT COUNT(*) as total_transactions, SUM(amount) as total_volume_inr, SUM(CASE WHEN status='Failed' THEN 1 ELSE 0 END) as failed_count, SUM(CASE WHEN is_fraud=1 THEN 1 ELSE 0 END) as fraud_count FROM transactions WHERE merchant_id = {merchant_id}]"
+
+    # 7. Default keyword search (e.g., "minnu yadav", "payment", "upi")
+    clean_query = re.sub(r'[^a-zA-Z0-9\s]', '', msg_lower).strip()
+    if clean_query:
+        words = [w for w in clean_query.split() if len(w) > 2 and w not in ["show", "the", "find", "get", "search", "list", "all", "what", "where"]]
+        if words:
+            like_clause = " OR ".join([f"LOWER(customer_name) LIKE '%{w}%' OR LOWER(reference_id) LIKE '%{w}%'" for w in words])
+            return f"[SQL: SELECT id, reference_id, customer_name, amount, payment_method, status, is_fraud, created_at FROM transactions WHERE ({like_clause}) AND merchant_id = {merchant_id}]"
+
+    return f"[SQL: SELECT id, reference_id, customer_name, amount, payment_method, status, is_fraud, created_at FROM transactions WHERE merchant_id = {merchant_id} ORDER BY id DESC LIMIT 5]"
+
+
 def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] = None) -> str:
     """Makes a direct POST request to NVIDIA API Catalog (OpenAI-compatible) with retries."""
     if not NVIDIA_API_KEY:
-        return (
-            "⚠ **NVIDIA API Key is missing.**\n\n"
-            "Please ensure `NVIDIA_API_KEY` is set in your backend `.env` file to activate the live Copilot."
-        )
+        return ""
 
     url = "https://integrate.api.nvidia.com/v1/chat/completions"
     headers = {
@@ -63,7 +119,7 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
 
             if response.status_code != 200:
                 print(f"NVIDIA API Error: {response.status_code} - {response.text}")
-                return f"Error: NVIDIA API responded with code {response.status_code}."
+                return ""
 
             res_json = response.json()
             choices = res_json.get("choices", [])
@@ -71,20 +127,26 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
                 content = choices[0].get("message", {}).get("content")
                 if content is not None:
                     return str(content)
-            return "Error: Empty response returned from NVIDIA."
+            return ""
         except Exception as e:
             print(f"NVIDIA Exception on attempt {attempt + 1}: {e}")
             if attempt < 3:
                 time.sleep(2.5)
                 continue
-            return f"Error: Failed to request NVIDIA API: {e}"
+            return ""
 
-    return "Error: NVIDIA API is temporarily overloaded (503/429)."
+    return ""
 
 
-def call_llm(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] = None) -> str:
-    """Invokes the NVIDIA API for LLM reasoning and agent tool calling."""
-    return call_nvidia(system_prompt, user_message, chat_history)
+def call_llm(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] = None, merchant_id: int = 1) -> str:
+    """Invokes the NVIDIA API for LLM reasoning, or falls back to smart intent parsing if key is missing or request fails."""
+    if NVIDIA_API_KEY:
+        res = call_nvidia(system_prompt, user_message, chat_history)
+        if res and not res.startswith("Error:"):
+            return res
+
+    return parse_intent_fallback(user_message, merchant_id)
+
 
 
 @router.post("/chat")
@@ -149,7 +211,7 @@ def _chat_copilot_internal(payload: Dict[str, Any], db: Session):
 
     # Multi-turn tool calling loop (max 4 iterations to prevent loops)
     for iteration in range(4):
-        ai_response = call_llm(system_prompt, current_user_msg, chat_history) or ""
+        ai_response = call_llm(system_prompt, current_user_msg, chat_history, merchant_id) or ""
         ai_response_clean = str(ai_response).strip()
 
         # 1. Action Tool: Update Settings (HITL)
