@@ -102,7 +102,7 @@ def get_nvidia_api_key() -> str:
 
 
 def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] | None = None) -> str:
-    """Makes a direct POST request to NVIDIA API Catalog (OpenAI-compatible) with retries across standard model endpoints."""
+    """Makes a direct POST request to NVIDIA API Catalog with a strict 5-second timeout to prevent UI hanging."""
     api_key = get_nvidia_api_key()
     if not api_key:
         return ""
@@ -123,44 +123,35 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
 
     messages.append({"role": "user", "content": user_message})
 
-    # Standard production models supported by NVIDIA API catalog
+    # Top production models on NVIDIA API catalog
     models_to_try = [
         "meta/llama-3.3-70b-instruct",
         "nvidia/llama-3.1-nemotron-70b-instruct",
-        "meta/llama-3.1-70b-instruct",
-        "google/gemma-2-27b-it",
     ]
-
-    import time
 
     for model_name in models_to_try:
         payload = {
             "model": model_name,
             "messages": messages,
             "temperature": 0.12,
-            "max_tokens": 2048,
+            "max_tokens": 1024,
         }
 
-        for attempt in range(2):
-            try:
-                response = requests.post(url, json=payload, headers=headers, timeout=30)
-                if response.status_code in [429, 503]:
-                    time.sleep(1.5)
-                    continue
+        try:
+            # Strict 5.0 second timeout to prevent Vercel/browser hanging
+            response = requests.post(url, json=payload, headers=headers, timeout=5.0)
 
-                if response.status_code == 200:
-                    res_json = response.json()
-                    choices = res_json.get("choices", [])
-                    if choices:
-                        content = choices[0].get("message", {}).get("content")
-                        if content is not None:
-                            return str(content)
-                else:
-                    print(f"NVIDIA Model {model_name} returned status {response.status_code}: {response.text}")
-                    break  # Try next model if status is 404 or 400
-            except Exception as e:
-                print(f"NVIDIA Exception on model {model_name} (attempt {attempt + 1}): {e}")
-                time.sleep(1.0)
+            if response.status_code == 200:
+                res_json = response.json()
+                choices = res_json.get("choices", [])
+                if choices:
+                    content = choices[0].get("message", {}).get("content")
+                    if content:
+                        return str(content)
+            else:
+                print(f"NVIDIA Model {model_name} status {response.status_code}")
+        except Exception as e:
+            print(f"NVIDIA Exception on model {model_name}: {e}")
 
     return ""
 
