@@ -77,14 +77,42 @@ def parse_intent_fallback(user_message: str, merchant_id: int = 1) -> str:
     return f"[SQL: SELECT id, reference_id, customer_name, amount, payment_method, status, is_fraud, created_at FROM transactions WHERE merchant_id = {merchant_id} ORDER BY id DESC LIMIT 5]"
 
 
+def get_nvidia_api_key() -> str:
+    """Dynamically fetch NVIDIA API key from environment variables or .env file."""
+    key = (
+        os.getenv("NVIDIA_API_KEY", "")
+        or os.getenv("NVIDIA_KEY", "")
+        or os.getenv("NVAPI_KEY", "")
+        or os.getenv("NV_API_KEY", "")
+        or os.getenv("NVIDIA_API_SECRET", "")
+    )
+    if not key:
+        # Check root or backend .env
+        for env_path in [".env", "backend/.env", "../.env"]:
+            if os.path.exists(env_path):
+                try:
+                    with open(env_path, "r") as f:
+                        for line in f:
+                            if "=" in line and not line.strip().startswith("#"):
+                                k, v = line.strip().split("=", 1)
+                                if k.strip() in ["NVIDIA_API_KEY", "NVIDIA_KEY", "NVAPI_KEY", "NV_API_KEY"]:
+                                    val = v.strip().strip('"').strip("'")
+                                    if val:
+                                        return val
+                except Exception:
+                    pass
+    return key
+
+
 def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] = None) -> str:
-    """Makes a direct POST request to NVIDIA API Catalog (OpenAI-compatible) with retries."""
-    if not NVIDIA_API_KEY:
+    """Makes a direct POST request to NVIDIA API Catalog (OpenAI-compatible) with retries across standard model endpoints."""
+    api_key = get_nvidia_api_key()
+    if not api_key:
         return ""
 
     url = "https://integrate.api.nvidia.com/v1/chat/completions"
     headers = {
-        "Authorization": f"Bearer {NVIDIA_API_KEY}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
         "Accept": "application/json",
     }
@@ -98,49 +126,52 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
 
     messages.append({"role": "user", "content": user_message})
 
-    payload = {
-        "model": "nvidia/nemotron-3-ultra-550b-a55b",
-        "messages": messages,
-        "temperature": 0.12,
-        "max_tokens": 2048,
-    }
+    # Standard production models supported by NVIDIA API catalog
+    models_to_try = [
+        "meta/llama-3.3-70b-instruct",
+        "nvidia/llama-3.1-nemotron-70b-instruct",
+        "meta/llama-3.1-70b-instruct",
+        "google/gemma-2-27b-it",
+    ]
 
     import time
 
-    for attempt in range(4):
-        try:
-            response = requests.post(url, json=payload, headers=headers, timeout=60)
-            if response.status_code in [429, 503]:
-                print(
-                    f"NVIDIA API returned status {response.status_code}. Retrying in 2.5s (attempt {attempt + 1}/4)..."
-                )
-                time.sleep(2.5)
-                continue
+    for model_name in models_to_try:
+        payload = {
+            "model": model_name,
+            "messages": messages,
+            "temperature": 0.12,
+            "max_tokens": 2048,
+        }
 
-            if response.status_code != 200:
-                print(f"NVIDIA API Error: {response.status_code} - {response.text}")
-                return ""
+        for attempt in range(2):
+            try:
+                response = requests.post(url, json=payload, headers=headers, timeout=30)
+                if response.status_code in [429, 503]:
+                    time.sleep(1.5)
+                    continue
 
-            res_json = response.json()
-            choices = res_json.get("choices", [])
-            if choices:
-                content = choices[0].get("message", {}).get("content")
-                if content is not None:
-                    return str(content)
-            return ""
-        except Exception as e:
-            print(f"NVIDIA Exception on attempt {attempt + 1}: {e}")
-            if attempt < 3:
-                time.sleep(2.5)
-                continue
-            return ""
+                if response.status_code == 200:
+                    res_json = response.json()
+                    choices = res_json.get("choices", [])
+                    if choices:
+                        content = choices[0].get("message", {}).get("content")
+                        if content is not None:
+                            return str(content)
+                else:
+                    print(f"NVIDIA Model {model_name} returned status {response.status_code}: {response.text}")
+                    break  # Try next model if status is 404 or 400
+            except Exception as e:
+                print(f"NVIDIA Exception on model {model_name} (attempt {attempt + 1}): {e}")
+                time.sleep(1.0)
 
     return ""
 
 
 def call_llm(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] = None, merchant_id: int = 1) -> str:
     """Invokes the NVIDIA API for LLM reasoning, or falls back to smart intent parsing if key is missing or request fails."""
-    if NVIDIA_API_KEY:
+    api_key = get_nvidia_api_key()
+    if api_key:
         res = call_nvidia(system_prompt, user_message, chat_history)
         if res and not res.startswith("Error:"):
             return res
