@@ -123,10 +123,12 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
 
     messages.append({"role": "user", "content": user_message})
 
-    # Top production models on NVIDIA API catalog
+    # Top production models on NVIDIA API catalog (prioritize fast sub-second endpoints)
     models_to_try = [
+        "meta/llama-3.1-8b-instruct",
+        "mistralai/mistral-7b-instruct-v0.3",
+        "google/gemma-2-9b-it",
         "meta/llama-3.3-70b-instruct",
-        "nvidia/llama-3.1-nemotron-70b-instruct",
     ]
 
     for model_name in models_to_try:
