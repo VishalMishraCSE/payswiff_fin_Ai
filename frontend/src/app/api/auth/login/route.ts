@@ -22,10 +22,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const { access_token, refresh_token } = data;
+    const { access_token, refresh_token, role } = data;
 
     // Create NextResponse and set HttpOnly cookies
-    const nextResponse = NextResponse.json({ success: true });
+    const nextResponse = NextResponse.json({ success: true, role: role || "merchant" });
 
     nextResponse.cookies.set({
       name: "access_token",

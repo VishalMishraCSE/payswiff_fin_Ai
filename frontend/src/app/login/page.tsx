@@ -26,7 +26,16 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed");
 
-      window.location.href = "/merchant/dashboard";
+      const userRole = data.role || "merchant";
+      if (userRole === "customer_care") {
+        window.location.href = "/customer-care/dashboard";
+      } else if (userRole === "analyst") {
+        window.location.href = "/analyst/dashboard";
+      } else if (userRole === "admin") {
+        window.location.href = "/admin/dashboard";
+      } else {
+        window.location.href = "/merchant/dashboard";
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {

@@ -43,6 +43,8 @@ def get_revenue_trend(db: Session = Depends(get_db)):
     # We group transactions by date and sum the amounts
     if db.bind.name == "sqlite":
         date_func = func.strftime("%Y-%m-%d", models.Transaction.created_at)
+    elif db.bind.name == "mysql":
+        date_func = func.date_format(models.Transaction.created_at, "%Y-%m-%d")
     else:
         date_func = func.to_char(models.Transaction.created_at, "YYYY-MM-DD")
 

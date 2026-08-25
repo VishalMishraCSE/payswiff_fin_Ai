@@ -175,6 +175,7 @@ def seed_default_users():
                 "password": "Password123!",
                 "biz": "Payswiff Demo Store",
             },
+            {"email": "customercare@payswiff.com", "role": "customer_care", "password": "Password123!", "biz": None},
             {"email": "analyst@payswiff.com", "role": "analyst", "password": "Password123!", "biz": None},
             {"email": "admin@payswiff.com", "role": "admin", "password": "Password123!", "biz": None},
         ]

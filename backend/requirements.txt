@@ -1,9 +1,9 @@
 fastapi
 uvicorn[standard]
 sqlalchemy
-psycopg2-binary
 alembic
 python-jose[cryptography]
+cryptography
 bcrypt
 python-multipart
 email-validator
@@ -16,6 +16,6 @@ scikit-learn
 pillow
 opencv-python-headless
 easyocr
---extra-index-url https://download.pytorch.org/whl/cpu
 torch
 torchvision
+pymysql==1.2.0

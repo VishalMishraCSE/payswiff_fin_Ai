@@ -27,6 +27,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   if (pathname.startsWith("/merchant")) {
     rolePrefix = "/merchant";
     role = "merchant";
+  } else if (pathname.startsWith("/customer-care")) {
+    rolePrefix = "/customer-care";
+    role = "customer care";
   } else if (pathname.startsWith("/admin")) {
     rolePrefix = "/admin";
     role = "admin";
@@ -42,9 +45,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     menuItems = [
       { name: "Overview", href: `${rolePrefix}/dashboard`, icon: LayoutDashboard },
       { name: "Transactions", href: `${rolePrefix}/transactions`, icon: Receipt },
-      { name: "KYC Upload", href: `${rolePrefix}/kyc`, icon: FileCheck },
+      { name: "Customer Care", href: `${rolePrefix}/customer-care`, icon: MessageSquare },
       { name: "AI Copilot", href: `${rolePrefix}/copilot`, icon: MessageSquare },
+      { name: "KYC Upload", href: `${rolePrefix}/kyc`, icon: FileCheck },
       { name: "ML Forecasting", href: `${rolePrefix}/forecast`, icon: TrendingUp },
+    ];
+  } else if (role === "customer care") {
+    menuItems = [
+      { name: "Support Ticket Queue", href: `/customer-care/dashboard`, icon: MessageSquare },
+      { name: "Customer Care Bot", href: `/merchant/customer-care`, icon: MessageSquare },
+      { name: "Merchant Transactions", href: `/analyst/transactions`, icon: Receipt },
     ];
   } else if (role === "analyst") {
     menuItems = [

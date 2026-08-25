@@ -23,6 +23,7 @@ class Token(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    role: str = "merchant"
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -58,4 +59,4 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     user_data = {"sub": user.email, "role": user.role}
     access_token = create_access_token(user_data)
     refresh_token = create_refresh_token(user_data)
-    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer", "role": user.role}

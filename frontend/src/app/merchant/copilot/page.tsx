@@ -13,10 +13,13 @@ import {
   HelpCircle,
   Database,
   Sliders,
-  Play
+  Play,
+  Headphones,
+  Cpu
 } from "lucide-react";
 import axios from "axios";
 import { getApiBaseUrl } from "@/utils/api";
+import FinAIChatbot from "@/components/FinAIChatbot";
 
 interface Message {
   id: string;
@@ -33,6 +36,7 @@ interface Message {
 }
 
 export default function CopilotPage() {
+  const [activeMode, setActiveMode] = useState<"customer_care" | "financial_copilot">("customer_care");
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -301,20 +305,58 @@ export default function CopilotPage() {
   return (
     <div className="min-h-[calc(100vh-8rem)] flex flex-col bg-slate-50 dark:bg-[#07090e] transition-colors duration-300">
 
-      {/* Title */}
-      <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4 mb-6">
-        <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-xs uppercase tracking-widest mb-1">
-          <Sparkles size={12} className="animate-pulse" />
-          <span>Interactive AI Operations</span>
+      {/* Header & Mode Switcher */}
+      <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-xs uppercase tracking-widest mb-1">
+            <Sparkles size={12} className="animate-pulse" />
+            <span>Interactive AI Operations</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            {activeMode === "customer_care" ? "FinAI Chatbot" : "FinAI Security Copilot"}
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {activeMode === "customer_care"
+              ? "Automated hardware diagnostics, troubleshooting, and 24/7 customer care dispatch."
+              : "Autonomous multi-agent chatbot capable of direct database execution and security override configurations."}
+          </p>
         </div>
-        <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-          FinAI Copilot
-        </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Autonomous multi-agent chatbot capable of direct database execution and security override configurations.</p>
+
+        {/* Mode Selector Tabs */}
+        <div className="flex items-center p-1 rounded-xl bg-slate-200/80 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-xs font-bold shrink-0 shadow-inner">
+          <button
+            onClick={() => setActiveMode("customer_care")}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all active:scale-95 cursor-pointer ${
+              activeMode === "customer_care"
+                ? "bg-red-600 text-white shadow-md shadow-red-600/20"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <Headphones size={13} />
+            <span>Customer Care Bot</span>
+          </button>
+          <button
+            onClick={() => setActiveMode("financial_copilot")}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all active:scale-95 cursor-pointer ${
+              activeMode === "financial_copilot"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <Cpu size={13} />
+            <span>Security Copilot</span>
+          </button>
+        </div>
       </div>
 
-      {/* Chat Space */}
-      <div className="flex-1 flex flex-col md:flex-row gap-6 items-stretch max-w-7xl mx-auto w-full">
+      {/* Mode 1: FinAI Customer Care Chatbot (Reference to Screenshot 2 & Flowchart 1) */}
+      {activeMode === "customer_care" ? (
+        <div className="flex justify-center w-full max-w-4xl mx-auto pb-6">
+          <FinAIChatbot />
+        </div>
+      ) : (
+        /* Mode 2: Financial Analyst & SQL Copilot */
+        <div className="flex-1 flex flex-col md:flex-row gap-6 items-stretch max-w-7xl mx-auto w-full">
 
         {/* Left column: Chatbox */}
         <div className="flex-1 flex flex-col glass-card overflow-hidden h-[580px]">
@@ -472,8 +514,8 @@ export default function CopilotPage() {
           </div>
 
         </div>
-
-      </div>
+        </div>
+      )}
     </div>
   );
 }

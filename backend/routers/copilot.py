@@ -447,3 +447,116 @@ def approve_action(payload: Dict[str, Any] = Body(...), db: Session = Depends(ge
         "status": "success",
         "message": f"Successfully authorized settings change! Current API rate limit is updated to **{new_limit} req/min** in database. Immutable audit log recorded.",
     }
+
+
+@router.post("/support-ticket")
+def create_support_ticket(payload: Dict[str, Any] = Body(...), db: Session = Depends(get_db)):
+    """
+    Creates and dispatches a customer care support ticket when troubleshooting does not resolve the merchant's issue.
+    """
+    merchant_id = payload.get("merchant_id", 1)
+    issue_category = payload.get("category", "General Technical Support")
+    details = payload.get("details", "Merchant requested Customer Care assistance via FinAI Chatbot.")
+    priority = payload.get("priority", "High")
+
+    ticket_id = f"TKT-{datetime.datetime.now().strftime('%m%d')}-{abs(hash(str(datetime.datetime.now()))) % 10000:04d}"
+
+    try:
+        # Save Support Ticket in MySQL
+        ticket = models.SupportTicket(
+            ticket_id=ticket_id,
+            merchant_id=merchant_id,
+            category=issue_category,
+            problem_details=details,
+            troubleshooting_attempted="Standard automated troubleshooting was attempted.",
+            status="pending",
+            priority=priority,
+            assigned_to="Payswiff Technical Care Specialist (On-Duty)",
+        )
+        db.add(ticket)
+
+        # Log to MySQL audit logs
+        audit_log = models.AuditLog(
+            method="POST",
+            path=f"/copilot/support-ticket/{ticket_id}",
+            user_email=f"merchant_{merchant_id}@payswiff.com",
+            status_code=200,
+        )
+        db.add(audit_log)
+        db.commit()
+        db.refresh(ticket)
+    except Exception as e:
+        db.rollback()
+        print(f"Error logging support ticket: {e}")
+
+    return {
+        "status": "dispatched",
+        "ticket_id": ticket_id,
+        "merchant_id": merchant_id,
+        "category": issue_category,
+        "priority": priority,
+        "assigned_to": "Payswiff Technical Care Specialist (On-Duty)",
+        "estimated_resolution_time": "< 10 minutes",
+        "message": f"Support Ticket **{ticket_id}** created and assigned to Payswiff Customer Care Team. A specialist has been dispatched.",
+    }
+
+
+@router.get("/support-tickets")
+def list_support_tickets(status: str = None, db: Session = Depends(get_db)):
+    """
+    Retrieves all support tickets for the Customer Care Officer dashboard queue.
+    """
+    query = db.query(models.SupportTicket)
+    if status:
+        query = query.filter(models.SupportTicket.status == status)
+
+    tickets = query.order_by(models.SupportTicket.created_at.desc()).all()
+    results = []
+    for t in tickets:
+        merchant = db.query(models.Merchant).filter(models.Merchant.id == t.merchant_id).first()
+        results.append(
+            {
+                "id": t.id,
+                "ticket_id": t.ticket_id,
+                "merchant_id": t.merchant_id,
+                "merchant_name": merchant.business_name if merchant else "Unknown Merchant",
+                "category": t.category,
+                "problem_details": t.problem_details,
+                "troubleshooting_attempted": t.troubleshooting_attempted,
+                "status": t.status,
+                "priority": t.priority,
+                "assigned_to": t.assigned_to,
+                "agent_notes": t.agent_notes,
+                "created_at": t.created_at.isoformat() if t.created_at else None,
+                "resolved_at": t.resolved_at.isoformat() if t.resolved_at else None,
+            }
+        )
+    return results
+
+
+@router.patch("/support-tickets/{ticket_id}")
+def update_support_ticket(ticket_id: str, payload: Dict[str, Any] = Body(...), db: Session = Depends(get_db)):
+    """
+    Allows Customer Care agents to update ticket status (in_progress, resolved) and add resolution notes.
+    """
+    ticket = db.query(models.SupportTicket).filter(models.SupportTicket.ticket_id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    if "status" in payload:
+        ticket.status = payload["status"]
+        if payload["status"] == "resolved":
+            ticket.resolved_at = datetime.datetime.now(datetime.timezone.utc)
+    if "agent_notes" in payload:
+        ticket.agent_notes = payload["agent_notes"]
+    if "assigned_to" in payload:
+        ticket.assigned_to = payload["assigned_to"]
+
+    db.commit()
+    db.refresh(ticket)
+    return {
+        "status": "success",
+        "ticket_id": ticket.ticket_id,
+        "new_status": ticket.status,
+        "message": f"Support Ticket {ticket.ticket_id} updated successfully.",
+    }
