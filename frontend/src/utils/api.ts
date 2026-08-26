@@ -3,7 +3,7 @@ export function getApiBaseUrl(): string {
     // Route API requests relatively through the Next.js reverse proxy
     return `${window.location.origin}/api/backend`;
   }
-  return process.env.BACKEND_URL || "http://127.0.0.1:8000";
+  return process.env.BACKEND_URL || "http://127.0.0.1:8005";
 }
 
 let cachedWsUrl: string | null = null;

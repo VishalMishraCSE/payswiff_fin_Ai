@@ -123,25 +123,22 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
 
     messages.append({"role": "user", "content": user_message})
 
-    # Top production models on NVIDIA API catalog (prioritize fast sub-second endpoints)
+    # Top production models on NVIDIA API catalog (prioritize fast active endpoints)
     models_to_try = [
+        "meta/llama-3.1-70b-instruct",
         "meta/llama-3.1-8b-instruct",
-        "mistralai/mistral-7b-instruct-v0.3",
-        "google/gemma-2-9b-it",
-        "meta/llama-3.3-70b-instruct",
     ]
 
     for model_name in models_to_try:
         payload = {
             "model": model_name,
             "messages": messages,
-            "temperature": 0.12,
+            "temperature": 0.2,
             "max_tokens": 1024,
         }
 
         try:
-            # Strict 5.0 second timeout to prevent Vercel/browser hanging
-            response = requests.post(url, json=payload, headers=headers, timeout=5.0)
+            response = requests.post(url, json=payload, headers=headers, timeout=8.0)
 
             if response.status_code == 200:
                 res_json = response.json()
@@ -560,3 +557,149 @@ def update_support_ticket(ticket_id: str, payload: Dict[str, Any] = Body(...), d
         "new_status": ticket.status,
         "message": f"Support Ticket {ticket.ticket_id} updated successfully.",
     }
+
+
+@router.post("/customer-care-chat")
+def customer_care_chat(payload: Dict[str, Any] = Body(...), db: Session = Depends(get_db)):
+    """
+    Multilingual Customer Care AI Assistant for merchants.
+    Understands queries in any language (English, Hindi, Telugu, Tamil, Kannada, Marathi, Bengali, Hinglish, etc.),
+    provides actionable step-by-step guidance, and can handle both hardware/POS inquiries and general questions.
+    """
+    user_message = payload.get("message", "").strip()
+    language = payload.get("language", "en").lower()
+    merchant_id = payload.get("merchant_id", 1)
+    chat_history = payload.get("chat_history", [])
+
+    if not user_message:
+        return {"sender": "ai", "message": "Please enter your question or issue."}
+
+    # Language mapping display name
+    lang_names = {
+        "en": "English",
+        "hi": "Hindi (हिन्दी)",
+        "te": "Telugu (తెలుగు)",
+        "ta": "Tamil (தமிழ்)",
+        "kn": "Kannada (ಕನ್ನಡ)",
+        "mr": "Marathi (मराठी)",
+        "bn": "Bengali (বাংলা)",
+        "hinglish": "Hinglish (Hindi written in English Roman script)",
+    }
+    target_language_name = lang_names.get(language, "English")
+
+    system_prompt = f"""You are **FinAI Care Assistant**, the official multilingual 24/7 customer care & technical support AI for the **Payswiff Merchant Platform**.
+You speak with warmth, deep technical expertise, and empathy.
+
+## Target Response Language
+- **IMPORTANT**: You MUST respond in **{target_language_name}**.
+- If the user wrote in Hindi, Telugu, Tamil, Kannada, Marathi, Bengali, or Hinglish, speak natively, fluently, and naturally in that requested language.
+- Use native scripts (Devanagari for Hindi/Marathi, Telugu script for Telugu, Tamil script for Tamil, Bengali script for Bengali, Kannada script for Kannada) OR Hinglish if target is Hinglish.
+
+## What You Understand
+1. **Payswiff Hardware & Devices**:
+   - **Soundbox (Smart Soundbox 2.0 / 3.0)**: Power ON/OFF, speaker audio volume, battery charging via Type-C adapter, SIM card tray ejector pin hole, audio language switching (Hindi, Telugu, Tamil, etc.).
+   - **POS Machines & Swiping Terminals**: EMV Chip insert, NFC Contactless Tap & Pay, Magnetic stripe swipe, thermal paper roll jam (57x40mm), 'PED Tamper' security lock, host timeout.
+   - **Dynamic QR Displays & Standees**: NPCI key refresh, screen display sync, offline buffer clear.
+2. **Payments, UPI & Settlements**:
+   - Failed transactions, amount debited from customer (automatic 24-48 hr NPCI bank refund cycle).
+   - Daily T+1 batch settlement payout schedule (11:30 PM automated credit), manual settlement close.
+   - KYC verification, chargeback dispute evidence, GST invoices.
+3. **General Inquiries & Knowledge**:
+   - You also intelligently understand greetings, general questions, business advice, math, and general merchant queries with polite, helpful, and concise answers.
+
+## Formatting Guidelines
+- Use clean Markdown: bold highlights, bullet points, and numbered steps (1., 2., 3.) when explaining procedures.
+- Keep troubleshooting steps easy to understand for busy shopkeepers and merchants.
+- If the user's issue cannot be fixed by troubleshooting (e.g. broken hardware, water damage, permanent tamper lock, persistent payment discrepancy), warmly let them know they can click "No, contact support person" to dispatch our on-duty specialist.
+"""
+
+    api_key = get_nvidia_api_key()
+    ai_text = ""
+    if api_key:
+        ai_text = call_nvidia(system_prompt, user_message, chat_history)
+
+    if not ai_text:
+        # Smart multilingual fallback knowledge
+        ai_text = generate_multilingual_fallback(user_message, language)
+
+    # Detect category and summary for potential support escalation
+    category, summary = detect_issue_category_and_summary(user_message)
+
+    return {
+        "sender": "ai",
+        "message": ai_text,
+        "language": language,
+        "category": category,
+        "summary": summary,
+    }
+
+
+def detect_issue_category_and_summary(msg: str):
+    m = msg.lower()
+    if any(k in m for k in ["sim", "eject", "slot", "pin", "hole", "tray"]):
+        return "Soundbox & POS - SIM Card & Connectivity", "SIM card error / not detected"
+    if any(k in m for k in ["battery", "charge", "power", "drain", "charger", "plug"]):
+        return "Hardware - Battery & Power Charging", "Battery charging or power failure"
+    if any(k in m for k in ["sound", "speaker", "audio", "voice", "volume", "soundbox", "bol"]):
+        return "Hardware - Sound Box Device", "Soundbox speaker / audio announcement error"
+    if any(k in m for k in ["network", "signal", "offline", "disconnect", "wifi", "4g"]):
+        return "Connectivity - 4G Network & Wi-Fi", "Terminal network offline / signal drop"
+    if any(k in m for k in ["card", "swipe", "chip", "nfc", "tap"]):
+        return "Swiping Machine - Card Reader & NFC", "Card reader swipe / EMV chip failure"
+    if any(k in m for k in ["payment", "failed", "paisa", "kat gaya", "refund", "utr", "transaction"]):
+        return "Transactions - Payment Gateway Routing", "Payment failure / customer debited"
+    if any(k in m for k in ["qr", "barcode", "screen", "display"]):
+        return "Smart Soundbox & POS - Dynamic QR", "Dynamic QR code screen not loading"
+    if any(k in m for k in ["printer", "paper", "receipt", "roll", "jam"]):
+        return "Swiping Machine - Thermal Printer", "Receipt printer jam or feeding error"
+    if any(k in m for k in ["settle", "payout", "bank", "khata", "jama"]):
+        return "Merchant Account - Bank Settlement", "Daily settlement payout pending"
+    if any(k in m for k in ["tamper", "lock", "ped"]):
+        return "Swiping Machine - Security Tamper Lock", "POS tamper lockout triggered"
+    return "General Technical Support", msg[:80]
+
+
+def generate_multilingual_fallback(msg: str, lang: str) -> str:
+    m = msg.lower()
+    
+    # Hindi Fallback
+    if lang == "hi":
+        if any(k in m for k in ["sim", "सिम"]):
+            return "📌 **SIM कार्ड समस्या का समाधान:**\n1. साउंड बॉक्स के साइड में दिए गए छोटे छेद में पिन डालकर SIM ट्रे बाहर निकालें।\n2. SIM के गोल्डन चिप को सूखे कपड़े से साफ करके दोबारा ठीक से लगाएं।\n3. डिवाइस को रीस्टार्ट करें और 30 सेकंड प्रतीक्षा करें जब तक नेटवर्क लाइट हरी/नीली न हो जाए।"
+        if any(k in m for k in ["sound", "speaker", "आवाज", "बोल", "साउंड"]):
+            return "📌 **साउंड बॉक्स आवाज समस्या का समाधान:**\n1. पावर बटन और रीस्टार्ट बटन को 5-10 सेकंड तक दबाकर रखें।\n2. साइड में दिए गए वॉल्यूम (+) बटन को दबाकर पूरी आवाज बढ़ाएं।\n3. ऊपर दिए गए 'ऑडियो टेस्ट' बटन को दबाकर स्पीकर चेक करें।"
+        if any(k in m for k in ["battery", "charge", "बैटरी", "चार्ज"]):
+            return "📌 **बैटरी और चार्जिंग समाधान:**\n1. ओरिजिनल 5V/2A चार्जर और Type-C केबल को कम से कम 20-30 मिनट तक कनेक्ट रखें।\n2. चेक करें कि रेड चार्जिंग इंडिकेटर लाइट जल रही है या नहीं।\n3. चार्ज होने के बाद पावर बटन को 10 सेकंड दबाकर चालू करें।"
+        if any(k in m for k in ["payment", "पैसे", "पेंडिंग", "कट"]):
+            return "📌 **पेमेंट / पैसे कटने की समस्या:**\n1. ग्राहक से बैंक SMS का UTR / RRN नंबर प्राप्त करें।\n2. FinAI के 'Transactions' टैब में स्टेटस चेक करें।\n3. यदि पैसे कट गए हैं और मशीन पर फेल्ड आया है, तो बैंक 24-48 घंटों में ग्राहक को स्वतः रिफंड कर देता है।"
+        return "नमस्ते! मैंने आपका प्रश्न समझ लिया है। Payswiff डिवाइस (साउंडबॉक्स, POS मशीन, पेमेंट या सेटलमेंट) से संबंधित किसी भी सहायता के लिए आप पूछ सकते हैं।"
+
+    # Telugu Fallback
+    elif lang == "te":
+        if any(k in m for k in ["sim", "సిమ్"]):
+            return "📌 **SIM కార్డ్ సమస్య పరిష్కారం:**\n1. సౌండ్‌బాక్స్ పక్కన ఉన్న చిన్న రంధ్రంలో పిన్ ఉంచి SIM ట్రేని బయటకు తీయండి.\n2. SIM పై ఉన్న గోల్డెన్ చిప్‌ను పొడి గుడ్డతో శుభ్రం చేసి మళ్ళీ సరిగ్గా అమర్చండి.\n3. డివైజ్‌ని రీస్టార్ట్ చేసి నెట్‌వర్క్ లైట్ ఆకుపచ్చ/నీలంగా మారే వరకు 30 సెకన్లు ఆగండి."
+        if any(k in m for k in ["sound", "speaker", "సౌండ్", "వాయిస్"]):
+            return "📌 **సౌండ్‌బాక్స్ స్పీకర్ సమస్య పరిష్కారం:**\n1. పవర్ బటన్ మరియు రీస్టార్ట్ బటన్‌ను 5-10 సెకన్ల పాటు నొక్కి ఉంచండి.\n2. వాల్యూమ్ (+) బటన్ నొక్కి శబ్దాన్ని పెంచండి.\n3. ఆడియో టెస్ట్ బటన్ నొక్కి స్పీకర్ వాయిస్‌ని చెక్ చేయండి."
+        if any(k in m for k in ["battery", "charge", "ఛార్జింగ్", "బ్యాటరీ"]):
+            return "📌 **బ్యాటరీ మరియు ఛార్జింగ్ సమస్య:**\n1. ఒరిజినల్ ఛార్జర్‌ను 20-30 నిమిషాల పాటు డివైజ్‌కి కనెక్ట్ చేసి ఉంచండి.\n2. రెడ్ ఛార్జింగ్ లైట్ వెలుగుతుందో లేదో చూడండి.\n3. పవర్ బటన్‌ను 10 సెకన్లు నొక్కి డివైజ్ ఆన్ చేయండి."
+        return "నమస్కారం! మీ ప్రశ్నను మేము విశ్లేషించాము. సౌండ్‌బాక్స్, POS మెషిన్, చెల్లింపులు లేదా సెటిల్‌మెంట్ సంబంధిత ఏ సహాయానికైనా అడగవచ్చు."
+
+    # Tamil Fallback
+    elif lang == "ta":
+        if any(k in m for k in ["sim", "சிம்"]):
+            return "📌 **SIM கார்டு தீர்வு:**\n1. சவுண்ட்பாக்ஸின் பக்கத்திலுள்ள துளையில் பின்னை செருகி SIM டிரேயை எடுக்கவும்.\n2. சிப்பின் தங்கப் பகுதியை துணியால் துடைத்து மீண்டும் சரியாக பொருத்தவும்.\n3. சாதனத்தை மறுதொடக்கம் (Restart) செய்யவும்."
+        if any(k in m for k in ["sound", "speaker", "சத்தம்", "சவுண்ட்"]):
+            return "📌 **சவுண்ட்பாக்ஸ் ஒலி தீர்வு:**\n1. பவர் பட்டனை 5-10 வினாடிகள் அழுத்தி ரீஸ்டார்ட் செய்யவும்.\n2. வால்யூம் (+) பொத்தானை அழுத்தி ஒலியை அதிகரிக்கவும்."
+        return "வணக்கம்! உங்கள் கோரிக்கை பெறப்பட்டது. Payswiff சவுண்ட்பாக்ஸ், POS இயந்திரம், கட்டண முறைகள் குறித்த அனைத்து சந்தேகங்களுக்கும் உதவ தயாராக உள்ளோம்."
+
+    # Hinglish Fallback
+    elif lang == "hinglish":
+        if any(k in m for k in ["sim", "slot"]):
+            return "📌 **SIM Card Solution:**\n1. Soundbox ke side me diye gaye small hole me ejector pin daalkar SIM tray bahar nikalein.\n2. SIM chip ko saaf kapde se clean karke wapas theek se lagayein.\n3. Machine ko restart karein aur 30 seconds wait karein jab tak network light steady green/blue na ho jaye."
+        if any(k in m for k in ["battery", "charge"]):
+            return "📌 **Battery & Charging Solution:**\n1. Device ko official Type-C charger se connect karein aur kam se kam 20-30 minutes charge hone dein.\n2. Red LED indicator light check karein.\n3. Power button ko 10 seconds tak hold karke ON karein."
+        return "Hello! Hum aapki help ke liye available hain. Soundbox, POS machine, payments ya settlement se juda koi bhi sawal poochiye!"
+
+    # Default English Fallback
+    return "Here are the recommended diagnostic troubleshooting steps for your inquiry:\n\n1. **Power Cycle**: Hold the Power ON/OFF button for 5-10 seconds to reboot the device.\n2. **Connectivity**: Verify your 4G SIM is seated properly or re-connect Wi-Fi.\n3. **Charging**: Ensure terminal is charged with official 5V/2A Type-C adapter.\n4. **Support**: If the problem persists, click 'No, contact support person' below to dispatch an on-duty specialist."
+
