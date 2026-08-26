@@ -58,16 +58,29 @@ export function middleware(request: NextRequest) {
     const role = payload?.role || "merchant";
 
     // Enforce role boundaries
-    if (path.startsWith("/merchant") && role !== "merchant") {
-      return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
+    if (role === "admin") {
+      // Admin has superuser access to all pages and portals
+      return NextResponse.next();
     }
+
     if (path.startsWith("/admin") && role !== "admin") {
       return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
     }
     if (path.startsWith("/analyst") && role !== "analyst") {
       return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
     }
-    if (path.startsWith("/customer-care") && role !== "customer_care" && role !== "customer-care" && role !== "admin") {
+    if (path.startsWith("/customer-care") && role !== "customer_care" && role !== "customer-care") {
+      return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
+    }
+    if (path.startsWith("/merchant") && role !== "merchant") {
+      // Customer care can access merchant customer-care bot & transactions to assist
+      if ((role === "customer_care" || role === "customer-care") && (path.startsWith("/merchant/customer-care") || path.startsWith("/merchant/transactions"))) {
+        return NextResponse.next();
+      }
+      // Analyst can access transactions and kyc
+      if (role === "analyst" && (path.startsWith("/merchant/transactions") || path.startsWith("/merchant/kyc"))) {
+        return NextResponse.next();
+      }
       return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
     }
   }

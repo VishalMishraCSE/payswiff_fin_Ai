@@ -15,6 +15,8 @@ import {
   Bot
 } from "lucide-react";
 
+import React, { useEffect, useState } from "react";
+
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
@@ -22,47 +24,68 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const [userRole, setUserRole] = useState<string | null>(null);
 
-  // Determine role prefix dynamically from current path
-  let rolePrefix = "";
-  let role = "merchant";
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.role) {
+            setUserRole(data.role);
+          }
+        }
+      } catch (e) {
+        // Fallback to path-based
+      }
+    };
+    fetchUserRole();
+  }, []);
 
-  if (pathname.startsWith("/merchant")) {
-    rolePrefix = "/merchant";
-    role = "merchant";
-  } else if (pathname.startsWith("/customer-care")) {
-    rolePrefix = "/customer-care";
-    role = "customer care";
-  } else if (pathname.startsWith("/admin")) {
-    rolePrefix = "/admin";
-    role = "admin";
-  } else if (pathname.startsWith("/analyst")) {
-    rolePrefix = "/analyst";
-    role = "analyst";
+  // Determine active role
+  let role = userRole || "merchant";
+  if (!userRole) {
+    if (pathname.startsWith("/admin")) role = "admin";
+    else if (pathname.startsWith("/customer-care")) role = "customer care";
+    else if (pathname.startsWith("/analyst")) role = "analyst";
+    else role = "merchant";
   }
+
+  // Normalize role string
+  if (role === "customer_care") role = "customer care";
 
   // Define dynamic menu items based on role
   let menuItems = [];
 
-  if (role === "merchant") {
+  if (role === "admin") {
     menuItems = [
-      { name: "Overview", href: `${rolePrefix}/dashboard`, icon: LayoutDashboard },
-      { name: "Transactions", href: `${rolePrefix}/transactions`, icon: Receipt },
-      { name: "Customer Care", href: `${rolePrefix}/customer-care`, icon: Headphones },
-      { name: "AI Copilot", href: `${rolePrefix}/copilot`, icon: Sparkles },
-      { name: "KYC Upload", href: `${rolePrefix}/kyc`, icon: FileCheck },
-      { name: "ML Forecasting", href: `${rolePrefix}/forecast`, icon: TrendingUp },
+      { name: "System Dashboard", href: `/admin/dashboard`, icon: LayoutDashboard },
+      { name: "Live Transactions", href: `/merchant/transactions`, icon: Receipt },
+      { name: "Customer Care Queue", href: `/customer-care/dashboard`, icon: MessageSquare },
+      { name: "KYC Compliance Queue", href: `/analyst/dashboard`, icon: FileCheck },
+      { name: "Customer Care Bot", href: `/merchant/customer-care`, icon: Headphones },
+      { name: "AI Copilot", href: `/merchant/copilot`, icon: Sparkles },
+    ];
+  } else if (role === "merchant") {
+    menuItems = [
+      { name: "Overview", href: `/merchant/dashboard`, icon: LayoutDashboard },
+      { name: "Transactions", href: `/merchant/transactions`, icon: Receipt },
+      { name: "Customer Care", href: `/merchant/customer-care`, icon: Headphones },
+      { name: "AI Copilot", href: `/merchant/copilot`, icon: Sparkles },
+      { name: "KYC Upload", href: `/merchant/kyc`, icon: FileCheck },
+      { name: "ML Forecasting", href: `/merchant/forecast`, icon: TrendingUp },
     ];
   } else if (role === "customer care") {
     menuItems = [
       { name: "Support Ticket Queue", href: `/customer-care/dashboard`, icon: MessageSquare },
       { name: "Customer Care Bot", href: `/merchant/customer-care`, icon: Headphones },
-      { name: "Merchant Transactions", href: `/analyst/transactions`, icon: Receipt },
+      { name: "Merchant Transactions", href: `/merchant/transactions`, icon: Receipt },
     ];
   } else if (role === "analyst") {
     menuItems = [
-      { name: "KYC Review Queue", href: `${rolePrefix}/dashboard`, icon: FileCheck },
-      { name: "Transactions Log", href: `${rolePrefix}/transactions`, icon: Receipt },
+      { name: "KYC Review Queue", href: `/analyst/dashboard`, icon: FileCheck },
+      { name: "Transactions Log", href: `/merchant/transactions`, icon: Receipt },
     ];
   } else {
     menuItems = [
@@ -73,6 +96,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       { name: "Customer Care Bot", href: `/merchant/customer-care`, icon: Headphones },
     ];
   }
+
 
   return (
     <>
