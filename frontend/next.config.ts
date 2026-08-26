@@ -22,6 +22,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/customer_care/:path*",
+        destination: "/customer-care/:path*",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

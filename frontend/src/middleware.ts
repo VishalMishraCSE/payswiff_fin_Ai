@@ -18,12 +18,35 @@ function decodeJwt(token: string) {
   }
 }
 
+function getRoleDashboard(role: string): string {
+  if (role === "customer_care" || role === "customer-care") {
+    return "/customer-care/dashboard";
+  }
+  if (role === "analyst") {
+    return "/analyst/dashboard";
+  }
+  if (role === "admin") {
+    return "/admin/dashboard";
+  }
+  return "/merchant/dashboard";
+}
+
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
   const path = request.nextUrl.pathname;
 
+  // Normalize /customer_care to /customer-care
+  if (path.startsWith("/customer_care")) {
+    const normalizedPath = path.replace("/customer_care", "/customer-care");
+    return NextResponse.redirect(new URL(normalizedPath, request.url));
+  }
+
   // Protect dashboard routes
-  const isProtectedPath = path.startsWith("/merchant") || path.startsWith("/admin") || path.startsWith("/analyst");
+  const isProtectedPath =
+    path.startsWith("/merchant") ||
+    path.startsWith("/admin") ||
+    path.startsWith("/analyst") ||
+    path.startsWith("/customer-care");
 
   if (isProtectedPath) {
     if (!token) {
@@ -36,13 +59,16 @@ export function middleware(request: NextRequest) {
 
     // Enforce role boundaries
     if (path.startsWith("/merchant") && role !== "merchant") {
-      return NextResponse.redirect(new URL(`/${role}/dashboard`, request.url));
+      return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
     }
     if (path.startsWith("/admin") && role !== "admin") {
-      return NextResponse.redirect(new URL(`/${role}/dashboard`, request.url));
+      return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
     }
     if (path.startsWith("/analyst") && role !== "analyst") {
-      return NextResponse.redirect(new URL(`/${role}/dashboard`, request.url));
+      return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
+    }
+    if (path.startsWith("/customer-care") && role !== "customer_care" && role !== "customer-care" && role !== "admin") {
+      return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
     }
   }
 
@@ -50,12 +76,21 @@ export function middleware(request: NextRequest) {
   if ((path === "/login" || path === "/register") && token) {
     const payload = decodeJwt(token);
     const role = payload?.role || "merchant";
-    return NextResponse.redirect(new URL(`/${role}/dashboard`, request.url));
+    return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/merchant/:path*", "/admin/:path*", "/analyst/:path*", "/login", "/register"],
+  matcher: [
+    "/merchant/:path*",
+    "/admin/:path*",
+    "/analyst/:path*",
+    "/customer-care/:path*",
+    "/customer_care/:path*",
+    "/login",
+    "/register",
+  ],
 };
+
