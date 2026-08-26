@@ -5,8 +5,9 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: [
     "localhost",
     "127.0.0.1",
-    "10.138.212.71",
+    "192.168.148.115",
     "192.168.148.204",
+    "10.138.212.71",
   ],
   async rewrites() {
     const backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8005";

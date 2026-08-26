@@ -128,9 +128,10 @@ export default function MerchantDashboard() {
         return;
       }
       try {
+        const port = window.location.port || '3005';
         const res = await axios.get(`${getApiBaseUrl()}/analytics/server-ip`);
         if (res.data && res.data.ip) {
-          setUpiUrl(`http://${res.data.ip}:3000/mock-upi-pay?merchant_id=1&route=UPI`);
+          setUpiUrl(`http://${res.data.ip}:${port}/mock-upi-pay?merchant_id=1&route=UPI`);
           return;
         }
       } catch (err) {
