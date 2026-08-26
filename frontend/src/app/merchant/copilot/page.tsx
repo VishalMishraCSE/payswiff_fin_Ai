@@ -36,7 +36,7 @@ interface Message {
 }
 
 export default function CopilotPage() {
-  const [activeMode, setActiveMode] = useState<"customer_care" | "financial_copilot">("customer_care");
+  const [activeMode, setActiveMode] = useState<"customer_care" | "financial_copilot">("financial_copilot");
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
