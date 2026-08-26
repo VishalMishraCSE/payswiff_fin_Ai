@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, transactions, merchants, analytics, copilot, kyc
+from routers import auth, transactions, merchants, analytics, copilot, kyc, admin
 from auth import RoleChecker, get_current_user
 from middleware.audit import AuditLoggingMiddleware
 import asyncio
@@ -39,6 +39,7 @@ app.include_router(merchants.router)
 app.include_router(analytics.router)
 app.include_router(copilot.router)
 app.include_router(kyc.router)
+app.include_router(admin.router)
 
 
 # ── WebSocket Manager for Real-Time Anomaly Alerts ────────────────────────────

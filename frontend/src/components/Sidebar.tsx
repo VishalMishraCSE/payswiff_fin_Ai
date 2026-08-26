@@ -66,7 +66,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     ];
   } else {
     menuItems = [
-      { name: "System Dashboard", href: `${rolePrefix}/dashboard`, icon: LayoutDashboard },
+      { name: "System Dashboard", href: `/admin/dashboard`, icon: LayoutDashboard },
+      { name: "Live Transactions", href: `/merchant/transactions`, icon: Receipt },
+      { name: "Customer Care Queue", href: `/customer-care/dashboard`, icon: MessageSquare },
+      { name: "KYC Compliance Queue", href: `/analyst/dashboard`, icon: FileCheck },
+      { name: "Customer Care Bot", href: `/merchant/customer-care`, icon: Headphones },
     ];
   }
 
