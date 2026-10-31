@@ -190,13 +190,12 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
 
     messages.append({"role": "user", "content": user_message})
 
-    # 70B+ parameter flagship models on NVIDIA API catalog
+    # Flagship 120B & 70B parameter models on NVIDIA API catalog
     models_to_try = [
+        "nvidia/nemotron-3.5-super-vl-120b-a12b",
+        "nvidia/nemotron-3.5-bolt-e4b",
         "nvidia/llama-3.1-nemotron-70b-instruct",
         "writer/palmyra-fin-70b-32k",
-        "nvidia/llama3-chatqa-1.5-70b",
-        "meta/llama-3.3-70b-instruct",
-        "meta/llama-3.2-90b-vision-instruct",
     ]
 
     for model_name in models_to_try:
@@ -204,17 +203,18 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
             "model": model_name,
             "messages": messages,
             "temperature": 0.2,
-            "max_tokens": 1024,
+            "max_tokens": 1536,
         }
 
         try:
-            response = requests.post(url, json=payload, headers=headers, timeout=8.0)
+            response = requests.post(url, json=payload, headers=headers, timeout=15.0)
 
             if response.status_code == 200:
                 res_json = response.json()
                 choices = res_json.get("choices", [])
                 if choices:
-                    content = choices[0].get("message", {}).get("content")
+                    msg = choices[0].get("message", {})
+                    content = msg.get("content") or msg.get("reasoning_content")
                     if content:
                         return str(content)
             else:
