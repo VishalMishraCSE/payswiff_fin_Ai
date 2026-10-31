@@ -190,10 +190,13 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
 
     messages.append({"role": "user", "content": user_message})
 
-    # Top production models on NVIDIA API catalog (prioritize fast active endpoints)
+    # 70B+ parameter flagship models on NVIDIA API catalog
     models_to_try = [
-        "meta/llama-3.1-70b-instruct",
-        "meta/llama-3.1-8b-instruct",
+        "nvidia/llama-3.1-nemotron-70b-instruct",
+        "writer/palmyra-fin-70b-32k",
+        "nvidia/llama3-chatqa-1.5-70b",
+        "meta/llama-3.3-70b-instruct",
+        "meta/llama-3.2-90b-vision-instruct",
     ]
 
     for model_name in models_to_try:
@@ -226,17 +229,17 @@ def call_llm(
     system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] | None = None, merchant_id: int = 1
 ) -> str:
     """Invokes Gemini (or NVIDIA) for LLM reasoning, or falls back to smart intent parsing if keys are missing or requests fail."""
-    # 1. Try Google Gemini first (active and responsive)
-    gemini_key = get_gemini_api_key()
-    if gemini_key:
-        res = call_gemini(system_prompt, user_message, chat_history)
-        if res and not res.startswith("Error:"):
-            return res
-
-    # 2. Try NVIDIA API
+    # 1. Prioritize NVIDIA 70B flagship model when key is present
     nvidia_key = get_nvidia_api_key()
     if nvidia_key:
         res = call_nvidia(system_prompt, user_message, chat_history)
+        if res and not res.startswith("Error:"):
+            return res
+
+    # 2. Fallback to Google Gemini
+    gemini_key = get_gemini_api_key()
+    if gemini_key:
+        res = call_gemini(system_prompt, user_message, chat_history)
         if res and not res.startswith("Error:"):
             return res
 
