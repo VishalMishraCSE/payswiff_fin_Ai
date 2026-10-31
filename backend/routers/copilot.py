@@ -23,26 +23,28 @@ def parse_intent_fallback(user_message: str, merchant_id: int = 1) -> str:
     msg_lower = user_message.lower().strip()
 
     # 1. Rate Limit Action
-    rate_match = re.search(r'(?:set|change|update)\s+(?:rate\s+limit|limit)\s+(?:to\s+)?(\d+)', msg_lower)
+    rate_match = re.search(r"(?:set|change|update)\s+(?:rate\s+limit|limit)\s+(?:to\s+)?(\d+)", msg_lower)
     if rate_match:
         val = rate_match.group(1)
         return f"[ACTION: UPDATE_RATE_LIMIT, value: {val}]"
 
     # 2. Inspect Transaction (#105, txn 105, inspect transaction 105)
-    inspect_match = re.search(r'(?:inspect|check|audit)\s+(?:transaction\s+)?(?:#|txn-)?(\w+)', msg_lower)
+    inspect_match = re.search(r"(?:inspect|check|audit)\s+(?:transaction\s+)?(?:#|txn-)?(\w+)", msg_lower)
     if inspect_match:
         ref = inspect_match.group(1)
         return f"[INSPECT: {ref}]"
-    
-    digits_inspect = re.search(r'#(\d+)', msg_lower)
+
+    digits_inspect = re.search(r"#(\d+)", msg_lower)
     if digits_inspect:
         return f"[INSPECT: {digits_inspect.group(1)}]"
 
     # 3. Customer payment lookup: "show payment of minnu yadav", "transactions for priya"
-    customer_match = re.search(r'(?:payment|payments|transaction|transactions|order|orders)\s+(?:of|for|by)\s+([a-zA-Z\s]+)', msg_lower)
+    customer_match = re.search(
+        r"(?:payment|payments|transaction|transactions|order|orders)\s+(?:of|for|by)\s+([a-zA-Z\s]+)", msg_lower
+    )
     if customer_match:
         name = customer_match.group(1).strip()
-        name = re.sub(r'^(the)\s+', '', name).strip()
+        name = re.sub(r"^(the)\s+", "", name).strip()
         if name:
             return f"[SQL: SELECT id, reference_id, customer_name, amount, payment_method, status, is_fraud, created_at FROM transactions WHERE LOWER(customer_name) LIKE '%{name}%' AND merchant_id = {merchant_id}]"
 
@@ -64,14 +66,79 @@ def parse_intent_fallback(user_message: str, merchant_id: int = 1) -> str:
         return f"[SQL: SELECT COUNT(*) as total_transactions, SUM(amount) as total_volume_inr, SUM(CASE WHEN status='Failed' THEN 1 ELSE 0 END) as failed_count, SUM(CASE WHEN is_fraud=1 THEN 1 ELSE 0 END) as fraud_count FROM transactions WHERE merchant_id = {merchant_id}]"
 
     # 7. Default keyword search (e.g., "minnu yadav", "payment", "upi")
-    clean_query = re.sub(r'[^a-zA-Z0-9\s]', '', msg_lower).strip()
+    clean_query = re.sub(r"[^a-zA-Z0-9\s]", "", msg_lower).strip()
     if clean_query:
-        words = [w for w in clean_query.split() if len(w) > 2 and w not in ["show", "the", "find", "get", "search", "list", "all", "what", "where"]]
+        words = [
+            w
+            for w in clean_query.split()
+            if len(w) > 2 and w not in ["show", "the", "find", "get", "search", "list", "all", "what", "where"]
+        ]
         if words:
-            like_clause = " OR ".join([f"LOWER(customer_name) LIKE '%{w}%' OR LOWER(reference_id) LIKE '%{w}%'" for w in words])
+            like_clause = " OR ".join(
+                [f"LOWER(customer_name) LIKE '%{w}%' OR LOWER(reference_id) LIKE '%{w}%'" for w in words]
+            )
             return f"[SQL: SELECT id, reference_id, customer_name, amount, payment_method, status, is_fraud, created_at FROM transactions WHERE ({like_clause}) AND merchant_id = {merchant_id}]"
 
     return f"[SQL: SELECT id, reference_id, customer_name, amount, payment_method, status, is_fraud, created_at FROM transactions WHERE merchant_id = {merchant_id} ORDER BY id DESC LIMIT 5]"
+
+
+def get_gemini_api_key() -> str:
+    """Dynamically fetch GEMINI_API_KEY from environment variables or .env file."""
+    key = os.getenv("GEMINI_API_KEY", "") or os.getenv("GOOGLE_API_KEY", "")
+    if not key:
+        for env_path in [".env", "backend/.env", "../.env"]:
+            if os.path.exists(env_path):
+                try:
+                    with open(env_path, "r") as f:
+                        for line in f:
+                            if "=" in line and not line.strip().startswith("#"):
+                                k, v = line.strip().split("=", 1)
+                                if k.strip() in ["GEMINI_API_KEY", "GOOGLE_API_KEY"]:
+                                    val = v.strip().strip('"').strip("'")
+                                    if val:
+                                        return val
+                except Exception:
+                    pass
+    return key
+
+
+def call_gemini(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] | None = None) -> str:
+    """Invokes Google Gemini API with system instructions, user message, and chat history."""
+    api_key = get_gemini_api_key()
+    if not api_key:
+        return ""
+
+    contents = []
+    if chat_history:
+        for turn in chat_history:
+            role = "model" if turn.get("role") in ["assistant", "model"] else "user"
+            txt = turn.get("text", turn.get("content", ""))
+            if txt:
+                contents.append({"role": role, "parts": [{"text": txt}]})
+    contents.append({"role": "user", "parts": [{"text": user_message}]})
+
+    models_to_try = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-flash-lite"]
+    for model_name in models_to_try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+        payload = {
+            "system_instruction": {"parts": [{"text": system_prompt}]},
+            "contents": contents,
+            "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1024},
+        }
+        try:
+            res = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=12.0)
+            if res.status_code == 200:
+                data = res.json()
+                candidates = data.get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    if parts:
+                        return parts[0].get("text", "")
+            else:
+                print(f"Gemini model {model_name} returned {res.status_code}: {res.text[:100]}")
+        except Exception as e:
+            print(f"Gemini call exception on {model_name}: {e}")
+    return ""
 
 
 def get_nvidia_api_key() -> str:
@@ -155,16 +222,25 @@ def call_nvidia(system_prompt: str, user_message: str, chat_history: List[Dict[s
     return ""
 
 
-def call_llm(system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] | None = None, merchant_id: int = 1) -> str:
-    """Invokes the NVIDIA API for LLM reasoning, or falls back to smart intent parsing if key is missing or request fails."""
-    api_key = get_nvidia_api_key()
-    if api_key:
+def call_llm(
+    system_prompt: str, user_message: str, chat_history: List[Dict[str, str]] | None = None, merchant_id: int = 1
+) -> str:
+    """Invokes Gemini (or NVIDIA) for LLM reasoning, or falls back to smart intent parsing if keys are missing or requests fail."""
+    # 1. Try Google Gemini first (active and responsive)
+    gemini_key = get_gemini_api_key()
+    if gemini_key:
+        res = call_gemini(system_prompt, user_message, chat_history)
+        if res and not res.startswith("Error:"):
+            return res
+
+    # 2. Try NVIDIA API
+    nvidia_key = get_nvidia_api_key()
+    if nvidia_key:
         res = call_nvidia(system_prompt, user_message, chat_history)
         if res and not res.startswith("Error:"):
             return res
 
     return parse_intent_fallback(user_message, merchant_id)
-
 
 
 @router.post("/chat")
@@ -390,9 +466,7 @@ def _chat_copilot_internal(payload: Dict[str, Any], db: Session):
     # Fallback if loops exceeded
     if last_observation:
         return {"sender": "ai", "message": f"Here are the findings from your query:\n\n{last_observation}"}
-    clean_fallback = re.sub(
-        r"\[(SQL|INSPECT|ACTION):.*?\]", "", ai_response, flags=re.IGNORECASE | re.DOTALL
-    ).strip()
+    clean_fallback = re.sub(r"\[(SQL|INSPECT|ACTION):.*?\]", "", ai_response, flags=re.IGNORECASE | re.DOTALL).strip()
     return {
         "sender": "ai",
         "message": clean_fallback or "I processed your request, but could not generate a textual summary.",
@@ -613,10 +687,7 @@ You speak with warmth, deep technical expertise, and empathy.
 - If the user's issue cannot be fixed by troubleshooting (e.g. broken hardware, water damage, permanent tamper lock, persistent payment discrepancy), warmly let them know they can click "No, contact support person" to dispatch our on-duty specialist.
 """
 
-    api_key = get_nvidia_api_key()
-    ai_text = ""
-    if api_key:
-        ai_text = call_nvidia(system_prompt, user_message, chat_history)
+    ai_text = call_llm(system_prompt, user_message, chat_history, merchant_id)
 
     if not ai_text:
         # Smart multilingual fallback knowledge
@@ -661,7 +732,7 @@ def detect_issue_category_and_summary(msg: str):
 
 def generate_multilingual_fallback(msg: str, lang: str) -> str:
     m = msg.lower()
-    
+
     # Hindi Fallback
     if lang == "hi":
         if any(k in m for k in ["sim", "सिम"]):
@@ -702,4 +773,3 @@ def generate_multilingual_fallback(msg: str, lang: str) -> str:
 
     # Default English Fallback
     return "Here are the recommended diagnostic troubleshooting steps for your inquiry:\n\n1. **Power Cycle**: Hold the Power ON/OFF button for 5-10 seconds to reboot the device.\n2. **Connectivity**: Verify your 4G SIM is seated properly or re-connect Wi-Fi.\n3. **Charging**: Ensure terminal is charged with official 5V/2A Type-C adapter.\n4. **Support**: If the problem persists, click 'No, contact support person' below to dispatch an on-duty specialist."
-

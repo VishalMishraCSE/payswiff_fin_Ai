@@ -16,30 +16,30 @@ def get_admin_overview(db: Session = Depends(get_db)):
     total_users = db.query(models.User).count()
     total_merchants = db.query(models.Merchant).count()
     total_txns = db.query(models.Transaction).count()
-    
+
     total_revenue = (
-        db.query(func.sum(models.Transaction.amount))
-        .filter(models.Transaction.status == "Success")
-        .scalar() or 0.0
+        db.query(func.sum(models.Transaction.amount)).filter(models.Transaction.status == "Success").scalar() or 0.0
     )
-    
+
     fraud_count = db.query(models.Transaction).filter(models.Transaction.is_fraud == True).count()
     audit_logs_count = db.query(models.AuditLog).count()
     tickets_count = db.query(models.SupportTicket).count()
     pending_kyc = db.query(models.Merchant).filter(models.Merchant.kyc_status == "pending").count()
     verified_kyc = db.query(models.Merchant).filter(models.Merchant.kyc_status == "verified").count()
-    
+
     # User roles breakdown
-    roles = (
-        db.query(models.User.role, func.count(models.User.id))
-        .group_by(models.User.role)
-        .all()
-    )
+    roles = db.query(models.User.role, func.count(models.User.id)).group_by(models.User.role).all()
     role_map = {r[0]: r[1] for r in roles}
 
-    # NVIDIA AI key check
+    # AI key check (Gemini / NVIDIA)
+    gemini_key = os.getenv("GEMINI_API_KEY", "") or os.getenv("GOOGLE_API_KEY", "")
     nv_key = os.getenv("NVIDIA_API_KEY", "")
-    ai_status = "Connected (Llama-3.1 70B & 8B)" if nv_key else "Local Rule Engine"
+    if gemini_key:
+        ai_status = "Connected (Gemini 2.5 Flash)"
+    elif nv_key:
+        ai_status = "Connected (NVIDIA AI Catalog)"
+    else:
+        ai_status = "Local Rule Engine"
 
     return {
         "total_users": total_users,
@@ -62,7 +62,7 @@ def get_admin_overview(db: Session = Depends(get_db)):
             "ai_engine": ai_status,
             "api_uptime": "99.98%",
             "system_status": "All Systems Operational",
-        }
+        },
     }
 
 
@@ -73,14 +73,16 @@ def list_admin_users(db: Session = Depends(get_db)):
     results = []
     for u in users:
         merchant_name = u.merchant.business_name if u.merchant else "—"
-        results.append({
-            "id": u.id,
-            "email": u.email,
-            "role": u.role,
-            "is_active": u.is_active,
-            "business_name": merchant_name,
-            "created_at": u.created_at.isoformat() if u.created_at else None,
-        })
+        results.append(
+            {
+                "id": u.id,
+                "email": u.email,
+                "role": u.role,
+                "is_active": u.is_active,
+                "business_name": merchant_name,
+                "created_at": u.created_at.isoformat() if u.created_at else None,
+            }
+        )
     return results
 
 
@@ -90,12 +92,12 @@ def update_user_status(user_id: int, payload: Dict[str, Any] = Body(...), db: Se
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     if "role" in payload:
         user.role = payload["role"]
     if "is_active" in payload:
         user.is_active = bool(payload["is_active"])
-        
+
     db.commit()
     db.refresh(user)
     return {"status": "success", "message": f"User {user.email} updated successfully."}
@@ -109,14 +111,16 @@ def list_admin_merchants(db: Session = Depends(get_db)):
     for m in merchants:
         user = db.query(models.User).filter(models.User.id == m.user_id).first()
         txn_count = db.query(models.Transaction).filter(models.Transaction.merchant_id == m.id).count()
-        results.append({
-            "id": m.id,
-            "business_name": m.business_name,
-            "user_email": user.email if user else "—",
-            "kyc_status": m.kyc_status,
-            "total_transactions": txn_count,
-            "created_at": m.created_at.isoformat() if m.created_at else None,
-        })
+        results.append(
+            {
+                "id": m.id,
+                "business_name": m.business_name,
+                "user_email": user.email if user else "—",
+                "kyc_status": m.kyc_status,
+                "total_transactions": txn_count,
+                "created_at": m.created_at.isoformat() if m.created_at else None,
+            }
+        )
     return results
 
 
@@ -126,11 +130,11 @@ def update_merchant_kyc(merchant_id: int, payload: Dict[str, Any] = Body(...), d
     merchant = db.query(models.Merchant).filter(models.Merchant.id == merchant_id).first()
     if not merchant:
         raise HTTPException(status_code=404, detail="Merchant not found")
-    
+
     status = payload.get("kyc_status")
     if status not in ["verified", "pending", "rejected"]:
         raise HTTPException(status_code=400, detail="Invalid KYC status")
-        
+
     merchant.kyc_status = status
     db.commit()
     db.refresh(merchant)
