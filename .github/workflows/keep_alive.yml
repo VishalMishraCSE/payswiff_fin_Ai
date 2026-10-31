@@ -1,0 +1,16 @@
+name: Keep FinAI Backend Warm
+
+on:
+  schedule:
+    # Runs every 10 minutes (cron: minute hour day month day-of-week)
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keep_alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping FinAI Production Backend
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://finai-backend-1xgv.onrender.com/)
+          echo "Render Backend Ping Status: $response"
